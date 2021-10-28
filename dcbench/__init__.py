@@ -6,5 +6,5 @@ from .__main__ import main
 from .version import __version__
 
 from .common import Scenario, Solution, Artefact
-from .scenarios.miniclean import *
+#from .tasks.miniclean import *
 

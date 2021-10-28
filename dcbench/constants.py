@@ -1,4 +1,10 @@
-DEFAULT_WORKING_DIR = "var"
+import os
+from pathlib import Path
+
+
+LOCAL_DIR = os.path.join(Path.home(), ".dcbench")
+PUBLIC_REMOTE_URL = "https://storage.googleapis.com/dcai/dcbench"
+
 
 ARTEFACTS_DIR = "artefacts"
 SCENARIOS_DIR = "scenarios"
@@ -11,5 +17,5 @@ LOCAL_ARTEFACTS_DIR = "local"
 METADATA_FILENAME = "metadata.json"
 RESULT_FILENAME = "result.json"
 
-PUBLIC_ARTEFACTS_URL = "https://worksheets.codalab.org/rest/bundles/0x398f861865974ab6b753b722b745bf9a/contents/blob/"
+PUBLIC_ARTEFACTS_URL = "https://storage.googleapis.com/dcai/"
 HIDDEN_ARTEFACTS_URL = None
