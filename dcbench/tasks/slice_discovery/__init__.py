@@ -6,10 +6,7 @@ import torch.nn as nn
 from dcbench.__main__ import scenarios
 from dcbench.common.solution import Solution
 from dcbench.common.artefact import (
-    ArtefactContainer,
     CSVArtefact,
-    DataPanelArtefact,
-    ModelArtefact,
 )
 from dcbench.common.problem import Problem
 

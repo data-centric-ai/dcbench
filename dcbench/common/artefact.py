@@ -29,6 +29,7 @@ class Artefact(ABC):
         self.id = artefact_id
         self.task_id = task_id
         os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
+        super().__init__()
 
     @property
     def local_path(self) -> str:
@@ -76,6 +77,26 @@ class Artefact(ABC):
         artefact.save(data)
         return artefact
 
+    @staticmethod
+    def from_yaml(loader: yaml.Loader, node):
+        data = loader.construct_mapping(node)
+        return data["class"](artefact_id=data["artefact_id"], task_id=data["task_id"])
+
+    @staticmethod
+    def to_yaml(dumper: yaml.Dumper, data: Artefact):
+        data = {
+            "artefact_id": data.id,
+            "task_id": data.task_id,
+            "class": type(data),
+        }
+        node = dumper.represent_mapping("!Artefact", data)
+        return node
+
+
+# need to use multi_representer to support
+yaml.add_multi_representer(Artefact, Artefact.to_yaml)
+yaml.add_constructor("!Artefact", Artefact.from_yaml)
+
 
 class CSVArtefact(Artefact):
 
@@ -90,21 +111,27 @@ class CSVArtefact(Artefact):
         return data.to_csv(self.local_path)
 
 
-
-
 class ArtefactContainer(ABC, Mapping):
 
     artefact_spec: Mapping[str, type]
     container_dir: str
     task_id: str = "none"
 
-    def __init__(self, container_id: str, artefacts: Mapping[str, Artefact]):
+    def __init__(
+        self,
+        container_id: str,
+        artefacts: Mapping[str, Artefact],
+        attributes: Mapping[str, Union[int, float, str]] = None,
+    ):
         self._check_artefact_spec(artefacts=artefacts)
         self.artefacts = artefacts
         self.path = os.path.join(
             self.task_id, self.container_dir, f"{container_id}.yaml"
         )
         self.container_id = container_id
+        if attributes is None:
+            attributes = {}
+        self.attributes = attributes
 
     @classmethod
     def from_artefacts(
@@ -113,16 +140,15 @@ class ArtefactContainer(ABC, Mapping):
         if container_id is None:
             container_id = uuid.uuid4().hex
         container = cls(container_id=uuid.uuid4().hex, artefacts=artefacts)
-        container.save()
         return container
 
     @property
     def attributes(self):
-        return {}
+        return self._attributes
 
     @attributes.setter
     def attributes(self, value):
-        pass
+        self._attributes = value
 
     def __getitem__(self, key):
         return self.artefacts.__getitem__(key).load()
@@ -157,22 +183,6 @@ class ArtefactContainer(ABC, Mapping):
         blob = bucket.blob(self.path)
         blob.upload_from_filename(self.local_path)
 
-    def save(self):
-        data = {
-            "container_id": self.id,
-            "attributes": self.attributes,
-            "artefacts": {
-                name: {
-                    "artefact_id": artefact.id,
-                    "task_id": artefact.task_id,
-                    "class": type(artefact),
-                }
-                for name, artefact in self.artefacts.items()
-            },
-        }
-        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
-        yaml.dump(data, open(self.local_path, "w"))
-
     @classmethod
     def from_id(cls, container_id: str):
         data = yaml.load(open(path, "r"))
@@ -197,3 +207,26 @@ class ArtefactContainer(ABC, Mapping):
                     f" {cls.__name__} expects an Artefact of type"
                     f" {cls.artefact_spec[name]}."
                 )
+
+    @staticmethod
+    def from_yaml(loader: yaml.Loader, node):
+        data = loader.construct_mapping(node)
+        return data["class"](
+            container_id=data["container_id"],
+            artefacts=data["artefacts"],
+            attributes=data["attributes"],
+        )
+
+    @staticmethod
+    def to_yaml(dumper: yaml.Dumper, data: ArtefactContainer):
+        data = {
+            "class": type(data), 
+            "container_id": data.container_id,
+            "attributes": data.attributes,
+            "artefacts": data.artefacts,
+        }
+        return dumper.represent_mapping("!ArtefactContainer", data)
+
+
+yaml.add_multi_representer(ArtefactContainer, ArtefactContainer.to_yaml)
+yaml.add_constructor("!ArtefactContainer", ArtefactContainer.from_yaml)
