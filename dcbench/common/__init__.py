@@ -1,3 +1,3 @@
-from .scenario import Problem
+from .problem import Problem
 from .solution import  Solution
-from .artefact import Artefact, CsvArtefact
+from .artefact import Artefact, CSVArtefact

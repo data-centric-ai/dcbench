@@ -13,7 +13,7 @@ def _solve_scenario(scenario: Scenario, method: Method):
     return solution 
 
 
-def solve(scenarios: List[Scenario], methods: List[Method]) -> pd.DataFrame:
+def solve(scenarios: ProblemSet, methods: List[Method]) -> pd.DataFrame:
     method_refs = [ray.put(method) for method in methods]
     solution_refs = []
     for scenario in scenarios:

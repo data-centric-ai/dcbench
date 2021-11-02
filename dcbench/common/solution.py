@@ -6,9 +6,8 @@ import string
 from pandas import Series
 from typing import Mapping, Optional, List, Any, Iterator
 
-from .artefact import ArtefactContainer, ArtefactInstance, ArtefactBundle
+from .artefact import ArtefactContainer
 from ..constants import (
-    DEFAULT_WORKING_DIR,
     METADATA_FILENAME,
     RESULT_FILENAME,
     SOLUTIONS_DIR,
@@ -44,6 +43,9 @@ class Result(Mapping):
 
 
 class Solution(ArtefactContainer):
+    
+    container_dir = SOLUTIONS_DIR
+
     def __init__(
         self,
         scenario: "Scenario",

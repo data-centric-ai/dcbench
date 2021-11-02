@@ -5,8 +5,8 @@ import os
 
 from typing import Optional
 
-from dcbench.common import Scenario, Solution
-from .constants import DEFAULT_WORKING_DIR, HIDDEN_ARTEFACTS_URL
+from dcbench.common import Problem, Solution
+from .constants import HIDDEN_ARTEFACTS_URL, LOCAL_DIR
 from .version import __version__
 
 
@@ -43,7 +43,7 @@ class MainGroup(click.Group):
 @click.option(
     "--working-dir",
     help="Set the working directory (default: %s)."
-    % os.path.join(os.getcwd(), DEFAULT_WORKING_DIR),
+    % os.path.join(os.getcwd(), LOCAL_DIR),
 )
 def main(
     hidden_artefacts_url: Optional[str] = None,
@@ -53,9 +53,9 @@ def main(
     """Collection of benchmarks that test various aspects of ML data preprocessing and management."""
     global HIDDEN_ARTEFACTS_URL
     HIDDEN_ARTEFACTS_URL = hidden_artefacts_url
-    global DEFAULT_WORKING_DIR
+    global LOCAL_DIR
     if working_dir is not None:
-        DEFAULT_WORKING_DIR = working_dir
+        LOCAL_DIR = working_dir
 
 
 @main.command(help="List all available scenarios.")

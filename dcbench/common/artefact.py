@@ -1,7 +1,10 @@
 from __future__ import annotations
 import os
 import pandas as pd
+import uuid
 from urllib.request import urlretrieve
+from functools import lru_cache
+import yaml
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
@@ -9,7 +12,7 @@ from typing import Any, Dict, Optional, Type, Iterator, List, Union
 
 from pandas.core.frame import DataFrame
 
-from dcbench.constants import ARTEFACTS_DIR, LOCAL_DIR, PUBLIC_REMOTE_URL
+from dcbench.constants import ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR, PUBLIC_REMOTE_URL
 
 from .bundle import RelationalBundle, Bundle
 from .download_utils import download_and_extract_archive
@@ -19,96 +22,107 @@ class Artefact(ABC):
 
     DEFAULT_EXT: str = ""
 
-    def __init__(
-        self, artefact_id: str,  **kwargs
-    ) -> None:
-        self.path = os.path.join(ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}")
+    def __init__(self, artefact_id: str, task_id: str, **kwargs) -> None:
+        self.path = os.path.join(
+            task_id, ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}"
+        )
         self.id = artefact_id
+        self.task_id = task_id
+        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
 
     @property
     def local_path(self) -> str:
         return os.path.join(LOCAL_DIR, self.path)
+
     @property
     def remote_url(self) -> str:
         return os.path.join(PUBLIC_REMOTE_URL, self.path)
-    
+
     @property
     def is_downloaded(self) -> bool:
         return os.path.exists(self.local_path)
 
-    def download(self): 
-        urlretrieve(self.remote_url, self.local_path) 
-        
+    @property
+    def is_uploaded(self) -> bool:
+        return os.path.exists(self.local_path)
+
+    def upload(self):
+        import google.cloud.storage as storage
+
+        client = storage.Client()
+        bucket = client.get_bucket(BUCKET_NAME)
+        blob = bucket.blob(self.path)
+        blob.upload_from_filename(self.local_path)
+
+    def download(self):
+        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
+        urlretrieve(self.remote_url, self.local_path)
+
     @abstractmethod
-    def load(self, basepath: str) -> Any:
+    def load(self) -> Any:
         pass
 
     @abstractmethod
-    def save(self, basepath: str) -> None:
+    def save(self, data: any) -> None:
         pass
+
+    @classmethod
+    def from_data(cls, data: any, task_id: str, artefact_id: str = None):
+        if artefact_id is None:
+            artefact_id = uuid.uuid4().hex
+
+        # TODO ():At some point we should probably enforce that ids are unique
+        artefact = cls(artefact_id=artefact_id, task_id=task_id)
+        artefact.save(data)
+        return artefact
 
 
 class CSVArtefact(Artefact):
 
     DEFAULT_EXT: str = "csv"
 
-    def __init__(
-        self, artefact_id: str, **kwargs
-    ) -> None:
-        self.object: Optional[DataFrame] = None
-        super().__init__(artefact_id=artefact_id, **kwargs)
-
-    def load(self, basepath: str) -> Any:
+    def load(self) -> Any:
         if self.object is None:
-            self.object = pd.read_csv(self.location(basepath))
+            self.object = pd.read_csv(self.local_path)
         return self.object
 
-    def save(self, basepath: str) -> None:
-        return self.object.to_csv(self.location(basepath))
+    def save(self, data: pd.DataFrame) -> None:
+        return data.to_csv(self.local_path)
 
 
-class DataPanelArtefact(Artefact):
-
-    DEFAULT_EXT: str = "mk"
-
-    def __init__(self):
-        pass
-
-
-class ModelArtefact(Artefact):
-
-    DEFAULT_EXT: str = "pt"
-
-    def __init__(self):
-        pass
 
 
 class ArtefactContainer(ABC, Mapping):
 
     artefact_spec: Mapping[str, type]
+    container_dir: str
+    task_id: str = "none"
 
-    def __init__(self, artefacts: Mapping[str, Artefact]):
+    def __init__(self, container_id: str, artefacts: Mapping[str, Artefact]):
         self._check_artefact_spec(artefacts=artefacts)
         self.artefacts = artefacts
+        self.path = os.path.join(
+            self.task_id, self.container_dir, f"{container_id}.yaml"
+        )
+        self.container_id = container_id
+
+    @classmethod
+    def from_artefacts(
+        cls, artefacts: Mapping[str, Artefact], container_id: str = None
+    ):
+        if container_id is None:
+            container_id = uuid.uuid4().hex
+        container = cls(container_id=uuid.uuid4().hex, artefacts=artefacts)
+        container.save()
+        return container
 
     @property
-    def artefacts(self):
+    def attributes(self):
+        return {}
 
-        if self.scenario_artefacts is None:
-            raise NotImplementedError(
-                "Each scenario class must have a defined collection of scenario_artefacts."
-            )
-
-        if self._artefacts is None:
-            url = [urllib.parse.urljoin(PUBLIC_ARTEFACTS_URL, self.id)]
-            if HIDDEN_ARTEFACTS_URL is not None:
-                url += [urllib.parse.urljoin(HIDDEN_ARTEFACTS_URL, self.id)]
-            artefacts = dict(
-                (artefact.id, ArtefactInstance(artefact, self))
-                for artefact in self.scenario_artefacts
-            )
-            self._artefacts = ArtefactBundle(artefacts, self, url)
-        return self._artefacts
+    @attributes.setter
+    def attributes(self, value):
+        pass
 
     def __getitem__(self, key):
         return self.artefacts.__getitem__(key).load()
@@ -120,111 +134,66 @@ class ArtefactContainer(ABC, Mapping):
         return self.artefacts.__len__()
 
     @property
-    def downloaded(self) -> bool:
-        return all(
-            x.downloaded or (HIDDEN_ARTEFACTS_URL is None and x.artefact.optional)
-            for x in self.artefacts.values()
+    def local_path(self) -> str:
+        return os.path.join(LOCAL_DIR, self.path)
+
+    @property
+    def remote_url(self) -> str:
+        return os.path.join(PUBLIC_REMOTE_URL, self.path)
+
+    @property
+    def is_downloaded(self) -> bool:
+        return all(x.downloaded for x in self.artefacts.values())
+
+    @property
+    def is_uploaded(self) -> bool:
+        return os.path.exists(self.local_path)
+
+    def upload(self):
+        import google.cloud.storage as storage
+
+        client = storage.Client()
+        bucket = client.get_bucket(BUCKET_NAME)
+        blob = bucket.blob(self.path)
+        blob.upload_from_filename(self.local_path)
+
+    def save(self):
+        data = {
+            "container_id": self.id,
+            "attributes": self.attributes,
+            "artefacts": {
+                name: {
+                    "artefact_id": artefact.id,
+                    "task_id": artefact.task_id,
+                    "class": type(artefact),
+                }
+                for name, artefact in self.artefacts.items()
+            },
+        }
+        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
+        yaml.dump(data, open(self.local_path, "w"))
+
+    @classmethod
+    def from_id(cls, container_id: str):
+        data = yaml.load(open(path, "r"))
+        artefacts = {
+            name: a["class"](artefact_id=a["id"], task_id=a["task_id"])
+            for name, a in data["artefacts"].items()
+        }
+        container = cls(
+            container_id=container_id,
+            artefacts=artefacts,
         )
-
-    def download(self) -> None:
-        if self.id is None:
-            raise TypeError("Can not download data for a scenario without an id.")
-
-        os.makedirs(self.location, exist_ok=True)
-
-        scenario_public_artefacts_url = urllib.parse.urljoin(
-            PUBLIC_ARTEFACTS_URL, self.id
-        )
-        download_and_extract_archive(
-            scenario_public_artefacts_url, self.location, remove_finished=True
-        )
-
-        if HIDDEN_ARTEFACTS_URL is not None:
-            scenario_hidden_artefacts_url = urllib.parse.urljoin(
-                HIDDEN_ARTEFACTS_URL, self.id
-            )
-            download_and_extract_archive(
-                scenario_hidden_artefacts_url, self.location, remove_finished=True
-            )
-
-    def upload():
-        pass
+        container.attributes = data["attributes"]
+        return container
 
     @classmethod
     def _check_artefact_spec(cls, artefacts: Mapping[str, Artefact]):
         for name, artefact in artefacts.items():
             if not isinstance(artefact, cls.artefact_spec[name]):
                 raise ValueError(
-                    f"Passed an artefact of type {type(artefact)} to {cls.__name__ƒ}"
+                    f"Passed an artefact of type {type(artefact)} to {cls.__name__}"
                     f" for the artefact named '{name}'. The specification for"
                     f" {cls.__name__} expects an Artefact of type"
                     f" {cls.artefact_spec[name]}."
                 )
-
-
-class ArtefactInstance:
-    def __init__(
-        self,
-        artefact: Artefact,
-        container: ArtefactContainer,
-        object: Optional[Any] = None,
-    ) -> None:
-        self.artefact = artefact
-        self.container = container
-        self.object = object
-
-    @property
-    def location(self) -> str:
-        return self.artefact.location(self.container.location)
-
-    @property
-    def downloaded(self) -> bool:
-        return self.artefact.downloaded(self.container.location)
-
-    def load(self) -> Any:
-        if self.object is None:
-            self.object = self.artefact.load(self.container.location)
-        return self.object
-
-    def save(self) -> None:
-        self.artefact.save(self.container.location)
-
-
-class ArtefactBundle(RelationalBundle[ArtefactInstance]):
-    def __init__(
-        self,
-        artefacts: List[ArtefactInstance],
-        container: ArtefactContainer,
-        url: Optional[Union[str, List[str]]],
-        **kwargs,
-    ) -> None:
-        self.container = container
-        self.url = url
-
-        super().__init__(artefacts, attributes=["location"], **kwargs)
-
-    @property
-    def location(self) -> str:
-        return os.path.join(self.container.location, ARTEFACTS_DIR)
-
-    def download(self) -> "ArtefactBundle":
-        os.makedirs(self.location, exist_ok=True)
-        for url in self.url:
-            download_and_extract_archive(url, self.location, remove_finished=True)
-
-        return self
-
-    @property
-    def downloaded(self) -> bool:
-        return all(
-            x.downloaded or (HIDDEN_ARTEFACTS_URL is None and x.artefact.optional)
-            for x in self.values()
-        )
-
-    def load(self) -> Bundle[Any]:
-        if not self.downloaded:
-            self.download()
-
-        return Bundle[Any](
-            dict((k, v.load()) for (k, v) in self.items() if v.downloaded)
-        )

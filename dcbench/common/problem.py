@@ -8,15 +8,15 @@ from typing import Mapping, Optional, List, Any, Type, TYPE_CHECKING
 
 from dcbench.common.bundle import RelationalBundle
 
-from .artefact import Artefact, ArtefactContainer, ArtefactInstance, ArtefactBundle
+from .artefact import Artefact, ArtefactContainer
 from ..constants import (
     LOCAL_DIR,
-    SCENARIOS_DIR,
+    PROBLEMS_DIR,
     PUBLIC_REMOTE_URL,
-
     HIDDEN_ARTEFACTS_URL,
 )
 from .download_utils import download_and_extract_archive
+
 if TYPE_CHECKING:
     from .solution import Solution
 
@@ -26,14 +26,9 @@ class Problem(ArtefactContainer):
     id: Optional[str] = None
     result_metrics: Optional[List[str]] = None
 
-    def __init__(self, artefacts: Mapping[str, Artefact], working_dir: str = None):
-        super().__init__(artefacts=artefacts)
-        self.working_dir: str = working_dir or LOCAL_DIR
+    container_dir = PROBLEMS_DIR
 
-    @property
-    def location(self) -> str:
-        return os.path.join(self.working_dir, SCENARIOS_DIR, self.id)
- 
+
     @property
     def solutions(self) -> RelationalBundle[Solution]:
         if self._solutions is None:
@@ -51,13 +46,12 @@ class Problem(ArtefactContainer):
 
     @classmethod
     def list(cls) -> List[str]:
-        return cls.scenarios.keys()
+        raise NotImplementedError
 
     @abstractmethod
     def solve(self, **kwargs: Any) -> Solution:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def evaluate(self, solution: Solution) -> Result:
-        pass
-
+        raise NotImplementedError
