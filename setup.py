@@ -21,6 +21,21 @@ REQUIRED = [
     # "ray[default]",
     # `"torchxrayvision",`
 ]
+EXTRAS = {
+    "dev": [
+        "black>=21.5b0",
+        "isort>=5.7.0",
+        "flake8>=3.8.4",
+        "docformatter>=1.4",
+        "pytest-cov>=2.10.1",
+        "sphinx-rtd-theme>=0.5.1",
+        "nbsphinx>=0.8.0",
+        "recommonmark>=0.7.1",
+        "parameterized",
+        "pre-commit>=2.9.3",
+        "sphinx-autobuild",
+    ],
+}
 
 setuptools.setup(
     name="dcbench",
@@ -40,4 +55,5 @@ setuptools.setup(
     ],
     python_requires=">=3.8",
     install_requires=REQUIRED,
+    extras_require=EXTRAS,
 )
