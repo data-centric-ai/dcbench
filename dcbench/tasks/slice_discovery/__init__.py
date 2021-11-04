@@ -6,7 +6,7 @@ import torch.nn as nn
 from dcbench.__main__ import scenarios
 from dcbench.common.solution import Solution
 from dcbench.common.artefact import (
-    CSVArtefact,
+    DataPanelArtefact,
 )
 from dcbench.common.problem import Problem
 
@@ -16,8 +16,9 @@ class SliceDiscoveryProblem(Problem):
     # scenario_df = .download()
 
     artefact_spec = {
-        "data": CSVArtefact,
-        # "model": ModelArtefact
+        "dataset": DataPanelArtefact,
+        "predictions": DataPanelArtefact,
+        "activations": DataPanelArtefact
     }
 
     task_id = "slice_discovery"

@@ -1,33 +1,57 @@
 from __future__ import annotations
 import os
 import pandas as pd
+import meerkat as mk
+
 import uuid
 from urllib.request import urlretrieve
-from functools import lru_cache
 import yaml
+import tempfile
+import subprocess
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import Any, Dict, Optional, Type, Iterator, List, Union
 
-from pandas.core.frame import DataFrame
+from meerkat.tools.lazy_loader import LazyLoader
 
 from dcbench.constants import ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR, PUBLIC_REMOTE_URL
 
-from .bundle import RelationalBundle, Bundle
-from .download_utils import download_and_extract_archive
+storage = LazyLoader("google.cloud.storage")
+torch = LazyLoader("torch")
+
+
+def _upload_dir_to_gcs(local_path: str, bucket_name: str, gcs_path: str):
+
+    client = storage.Client()
+    bucket = client.get_bucket(bucket_name)
+    assert os.path.isdir(local_path)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tarball_path = os.path.join(tmp_dir, "run.tar.gz")
+        subprocess.call(
+            [
+                "tar",
+                "-czf",
+                tarball_path,
+                "-C",
+                local_path,
+                ".",
+            ]
+        )
+        remote_path = gcs_path + ".tar.gz"
+        blob = bucket.blob(remote_path)
+        blob.upload_from_filename(tarball_path)
 
 
 class Artefact(ABC):
 
     DEFAULT_EXT: str = ""
+    isdir: bool = False
 
-    def __init__(self, artefact_id: str, task_id: str, **kwargs) -> None:
-        self.path = os.path.join(
-            task_id, ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}"
-        )
+    def __init__(self, artefact_id: str, **kwargs) -> None:
+        self.path = os.path.join(ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}")
         self.id = artefact_id
-        self.task_id = task_id
         os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
         super().__init__()
 
@@ -48,16 +72,42 @@ class Artefact(ABC):
         return os.path.exists(self.local_path)
 
     def upload(self):
-        import google.cloud.storage as storage
+        if not os.path.exists(self.local_path):
+            raise ValueError(
+                "Could not find Artefact to upload. "
+                "Are you sure it is stored locally?"
+            )
+        if self.isdir:
+            _upload_dir_to_gcs(
+                local_path=self.local_path, bucket_name=BUCKET_NAME, gcs_path=self.path
+            )
+        else:
+            client = storage.Client()
+            bucket = client.get_bucket(BUCKET_NAME)
+            blob = bucket.blob(self.path)
+            blob.upload_from_filename(self.local_path)
 
-        client = storage.Client()
-        bucket = client.get_bucket(BUCKET_NAME)
-        blob = bucket.blob(self.path)
-        blob.upload_from_filename(self.local_path)
+    def download(self, force: bool = False):
+        if os.path.exists(self.local_path) and not force:
+            return
 
-    def download(self):
-        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
-        urlretrieve(self.remote_url, self.local_path)
+        if self.isdir:
+            os.makedirs(self.local_path, exist_ok=True)
+            tarball_path = self.local_path + ".tar.gz"
+            print(tarball_path)
+            urlretrieve(self.remote_url + ".tar.gz", tarball_path)
+            subprocess.call(["tar", "-xzf", tarball_path, "-C", self.local_path])
+
+        else:
+            os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
+            urlretrieve(self.remote_url, self.local_path)
+
+    def _ensure_downloaded(self):
+        if not self.is_downloaded:
+            raise ValueError(
+                "Cannot load Artefact that has not been downloaded."
+                "Call `artefact.download()`."
+            )
 
     @abstractmethod
     def load(self) -> Any:
@@ -68,25 +118,24 @@ class Artefact(ABC):
         pass
 
     @classmethod
-    def from_data(cls, data: any, task_id: str, artefact_id: str = None):
+    def from_data(cls, data: any, artefact_id: str = None):
         if artefact_id is None:
             artefact_id = uuid.uuid4().hex
 
         # TODO ():At some point we should probably enforce that ids are unique
-        artefact = cls(artefact_id=artefact_id, task_id=task_id)
+        artefact = cls(artefact_id=artefact_id)
         artefact.save(data)
         return artefact
 
     @staticmethod
     def from_yaml(loader: yaml.Loader, node):
         data = loader.construct_mapping(node)
-        return data["class"](artefact_id=data["artefact_id"], task_id=data["task_id"])
+        return data["class"](artefact_id=data["artefact_id"])
 
     @staticmethod
     def to_yaml(dumper: yaml.Dumper, data: Artefact):
         data = {
             "artefact_id": data.id,
-            "task_id": data.task_id,
             "class": type(data),
         }
         node = dumper.represent_mapping("!Artefact", data)
@@ -102,13 +151,40 @@ class CSVArtefact(Artefact):
 
     DEFAULT_EXT: str = "csv"
 
-    def load(self) -> Any:
-        if self.object is None:
-            self.object = pd.read_csv(self.local_path)
-        return self.object
+    def load(self) -> pd.DataFrame:
+        self._ensure_downloaded()
+        return pd.read_csv(self.local_path)
 
     def save(self, data: pd.DataFrame) -> None:
         return data.to_csv(self.local_path)
+
+
+class DataPanelArtefact(Artefact):
+
+    DEFAULT_EXT: str = "mk"
+    isdir: bool = True
+
+    def load(self) -> pd.DataFrame:
+        self._ensure_downloaded()
+        return mk.DataPanel.read(self.local_path)
+
+    def save(self, data: mk.DataPanel) -> None:
+        return data.write(self.local_path)
+
+
+class ModelArtefact(Artefact):
+
+    DEFAULT_EXT: str = "pt"
+
+    def load(self) -> pd.DataFrame:
+        pass
+        # TODO: add custom model class
+
+    def save(self, data) -> None:
+        return torch.save({"state_dict": data.state_dict()}, self.local_path)
+
+
+BASIC_TYPE = Union[int, float, str, bool]
 
 
 class ArtefactContainer(ABC, Mapping):
@@ -121,13 +197,10 @@ class ArtefactContainer(ABC, Mapping):
         self,
         container_id: str,
         artefacts: Mapping[str, Artefact],
-        attributes: Mapping[str, Union[int, float, str]] = None,
+        attributes: Mapping[str, BASIC_TYPE] = None,
     ):
         self._check_artefact_spec(artefacts=artefacts)
         self.artefacts = artefacts
-        self.path = os.path.join(
-            self.task_id, self.container_dir, f"{container_id}.yaml"
-        )
         self.container_id = container_id
         if attributes is None:
             attributes = {}
@@ -135,11 +208,14 @@ class ArtefactContainer(ABC, Mapping):
 
     @classmethod
     def from_artefacts(
-        cls, artefacts: Mapping[str, Artefact], container_id: str = None
+        cls,
+        artefacts: Mapping[str, Artefact],
+        attributes: Mapping[str, BASIC_TYPE] = None,
     ):
-        if container_id is None:
-            container_id = uuid.uuid4().hex
-        container = cls(container_id=uuid.uuid4().hex, artefacts=artefacts)
+        container_id = uuid.uuid4().hex
+        container = cls(
+            container_id=container_id, artefacts=artefacts, attributes=attributes
+        )
         return container
 
     @property
@@ -160,28 +236,20 @@ class ArtefactContainer(ABC, Mapping):
         return self.artefacts.__len__()
 
     @property
-    def local_path(self) -> str:
-        return os.path.join(LOCAL_DIR, self.path)
-
-    @property
-    def remote_url(self) -> str:
-        return os.path.join(PUBLIC_REMOTE_URL, self.path)
-
-    @property
     def is_downloaded(self) -> bool:
-        return all(x.downloaded for x in self.artefacts.values())
+        return all(x.is_downloaded for x in self.artefacts.values())
 
     @property
     def is_uploaded(self) -> bool:
         return os.path.exists(self.local_path)
 
     def upload(self):
-        import google.cloud.storage as storage
+        for artefact in self.artefacts.values():
+            artefact.upload()
 
-        client = storage.Client()
-        bucket = client.get_bucket(BUCKET_NAME)
-        blob = bucket.blob(self.path)
-        blob.upload_from_filename(self.local_path)
+    def download(self, force: bool = False) -> bool:
+        for artefact in self.artefacts.values():
+            artefact.download(force=force)
 
     @classmethod
     def from_id(cls, container_id: str):
@@ -200,6 +268,12 @@ class ArtefactContainer(ABC, Mapping):
     @classmethod
     def _check_artefact_spec(cls, artefacts: Mapping[str, Artefact]):
         for name, artefact in artefacts.items():
+            if name not in cls.artefact_spec:
+                raise ValueError(
+                    f"Passed artefact name '{name}', but the specification for"
+                    f" {cls.__name__} doesn't include it."
+                )
+
             if not isinstance(artefact, cls.artefact_spec[name]):
                 raise ValueError(
                     f"Passed an artefact of type {type(artefact)} to {cls.__name__}"
@@ -220,7 +294,7 @@ class ArtefactContainer(ABC, Mapping):
     @staticmethod
     def to_yaml(dumper: yaml.Dumper, data: ArtefactContainer):
         data = {
-            "class": type(data), 
+            "class": type(data),
             "container_id": data.container_id,
             "attributes": data.attributes,
             "artefacts": data.artefacts,
