@@ -21,7 +21,7 @@ class SliceDiscoveryProblem(Problem):
         "activations": DataPanelArtefact
     }
 
-    task_id = "slice_discovery"
+    task_id: str = "slice_discovery"
 
     # def __init__(self):
     #     self.properties = {

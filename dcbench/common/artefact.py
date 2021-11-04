@@ -4,7 +4,8 @@ import pandas as pd
 import meerkat as mk
 
 import uuid
-from urllib.request import urlretrieve
+from urllib.request import urlretrieve, urlopen
+from urllib.error import HTTPError
 import yaml
 import tempfile
 import subprocess
@@ -44,6 +45,25 @@ def _upload_dir_to_gcs(local_path: str, bucket_name: str, gcs_path: str):
         blob.upload_from_filename(tarball_path)
 
 
+def _url_exists(url: str):
+    try:
+        response = urlopen(url)
+        status_code = response.getcode()
+        return status_code == 200
+    except HTTPError:
+        return False
+
+
+"""[summary]
+
+artefacts
+    common
+    slice
+    miniclean
+
+"""
+mk.datasets.get("imagenet")
+
 class Artefact(ABC):
 
     DEFAULT_EXT: str = ""
@@ -61,7 +81,9 @@ class Artefact(ABC):
 
     @property
     def remote_url(self) -> str:
-        return os.path.join(PUBLIC_REMOTE_URL, self.path)
+        return os.path.join(
+            PUBLIC_REMOTE_URL, self.path + ".tar.gz" if self.isdir else ""
+        )
 
     @property
     def is_downloaded(self) -> bool:
@@ -69,14 +91,17 @@ class Artefact(ABC):
 
     @property
     def is_uploaded(self) -> bool:
-        return os.path.exists(self.local_path)
+        return _url_exists(self.remote_url)
 
-    def upload(self):
+    def upload(self, force: bool = False):
         if not os.path.exists(self.local_path):
             raise ValueError(
                 "Could not find Artefact to upload. "
                 "Are you sure it is stored locally?"
             )
+        if self.is_uploaded and not force:
+            return 
+            
         if self.isdir:
             _upload_dir_to_gcs(
                 local_path=self.local_path, bucket_name=BUCKET_NAME, gcs_path=self.path
@@ -88,14 +113,13 @@ class Artefact(ABC):
             blob.upload_from_filename(self.local_path)
 
     def download(self, force: bool = False):
-        if os.path.exists(self.local_path) and not force:
+        if self.is_downloaded and not force:
             return
 
         if self.isdir:
             os.makedirs(self.local_path, exist_ok=True)
             tarball_path = self.local_path + ".tar.gz"
-            print(tarball_path)
-            urlretrieve(self.remote_url + ".tar.gz", tarball_path)
+            urlretrieve(self.remote_url, tarball_path)
             subprocess.call(["tar", "-xzf", tarball_path, "-C", self.local_path])
 
         else:
@@ -183,6 +207,7 @@ class ModelArtefact(Artefact):
     def save(self, data) -> None:
         return torch.save({"state_dict": data.state_dict()}, self.local_path)
 
+class ImageNetDatasetArtefact
 
 BASIC_TYPE = Union[int, float, str, bool]
 
@@ -241,7 +266,7 @@ class ArtefactContainer(ABC, Mapping):
 
     @property
     def is_uploaded(self) -> bool:
-        return os.path.exists(self.local_path)
+        return all(x.is_uploaded for x in self.artefacts.values())
 
     def upload(self):
         for artefact in self.artefacts.values():
@@ -250,6 +275,23 @@ class ArtefactContainer(ABC, Mapping):
     def download(self, force: bool = False) -> bool:
         for artefact in self.artefacts.values():
             artefact.download(force=force)
+
+    @classmethod
+    def create_set(cls, containers: List[ArtefactContainer]):
+        for container in containers:
+            assert isinstance(container, cls)
+            container.upload()
+        
+        yaml.dump(containers, open("/tasks/slice_discovery/problems.yaml"))
+        upload("/tasks")
+        pass 
+        
+
+    @classmethod
+    def list(cls):
+        # do the loading here, not in the init 
+        cls = yaml.load(containers, open("/tasks/slice_discovery/problems.yaml"))
+        returns cls.problems # maybe a dataframe 
 
     @classmethod
     def from_id(cls, container_id: str):

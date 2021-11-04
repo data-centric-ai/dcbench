@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 class Problem(ArtefactContainer):
 
-    id: Optional[str] = None
+    task_id: str
     result_metrics: Optional[List[str]] = None
 
     container_dir = PROBLEMS_DIR
