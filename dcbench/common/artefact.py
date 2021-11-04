@@ -10,13 +10,19 @@ import yaml
 import tempfile
 import subprocess
 
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Mapping
 from typing import Any, Dict, Optional, Type, Iterator, List, Union
 
 from meerkat.tools.lazy_loader import LazyLoader
 
-from dcbench.constants import ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR, PUBLIC_REMOTE_URL
+from dcbench.constants import (
+    ARTEFACTS_DIR,
+    BUCKET_NAME,
+    LOCAL_DIR,
+    PROBLEMS_DIR,
+    PUBLIC_REMOTE_URL,
+)
 
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
@@ -54,16 +60,6 @@ def _url_exists(url: str):
         return False
 
 
-"""[summary]
-
-artefacts
-    common
-    slice
-    miniclean
-
-"""
-mk.datasets.get("imagenet")
-
 class Artefact(ABC):
 
     DEFAULT_EXT: str = ""
@@ -100,8 +96,8 @@ class Artefact(ABC):
                 "Are you sure it is stored locally?"
             )
         if self.is_uploaded and not force:
-            return 
-            
+            return
+
         if self.isdir:
             _upload_dir_to_gcs(
                 local_path=self.local_path, bucket_name=BUCKET_NAME, gcs_path=self.path
@@ -207,12 +203,78 @@ class ModelArtefact(Artefact):
     def save(self, data) -> None:
         return torch.save({"state_dict": data.state_dict()}, self.local_path)
 
-class ImageNetDatasetArtefact
 
 BASIC_TYPE = Union[int, float, str, bool]
 
 
-class ArtefactContainer(ABC, Mapping):
+class ArtefactContainerClass(ABCMeta):
+    @property
+    def instances_path(self):
+        return os.path.join(self.task_id, self.container_id, "instances.yaml")
+
+    @property
+    def local_instances_path(self):
+        return os.path.join(LOCAL_DIR, self.instances_path)
+
+    @property
+    def remote_instances_url(self):
+        return os.path.join(PUBLIC_REMOTE_URL, self.instances_path)
+
+    def write_instances(self, containers: List[ArtefactContainer]):
+        for container in containers:
+            assert isinstance(container, self)
+            # container.upload()
+
+        os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
+        yaml.dump(containers, open(self.local_instances_path, "w"))
+
+    def upload_instances(self, include_artefacts: bool = False):
+        for container in self.instances:
+            assert isinstance(container, self)
+            if include_artefacts:
+                container.upload()
+        client = storage.Client()
+        bucket = client.get_bucket(BUCKET_NAME)
+        blob = bucket.blob(self.instances_path)
+        blob.upload_from_filename(self.local_instances_path)
+
+    def download_instances(self, include_artefacts: bool = False):
+        os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
+        urlretrieve(self.remote_instances_url, self.local_instances_path)
+
+        for container in self.instances:
+            assert isinstance(container, self)
+            if include_artefacts:
+                container.upload()
+
+    @property
+    def instances(self):
+        if not os.path.exists(self.local_instances_path):
+            self.download_instances()
+        return yaml.load(open(self.local_instances_path), Loader=yaml.FullLoader)
+
+    @staticmethod
+    def from_yaml(loader: yaml.Loader, node):
+        data = loader.construct_scalar(node)
+        if data == "slice_discovery":
+            from ..tasks.slice import SliceDiscoveryProblem
+
+            return SliceDiscoveryProblem
+        else:
+            raise ValueError
+
+    @staticmethod
+    def to_yaml(dumper: yaml.Dumper, data: ArtefactContainerClass):
+        return dumper.represent_scalar(
+            tag="!ArtefactContainerClass", value=data.task_id
+        )
+
+
+yaml.add_multi_representer(ArtefactContainerClass, ArtefactContainerClass.to_yaml)
+yaml.add_constructor("!ArtefactContainerClass", ArtefactContainerClass.from_yaml)
+
+
+class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
 
     artefact_spec: Mapping[str, type]
     container_dir: str
@@ -275,37 +337,6 @@ class ArtefactContainer(ABC, Mapping):
     def download(self, force: bool = False) -> bool:
         for artefact in self.artefacts.values():
             artefact.download(force=force)
-
-    @classmethod
-    def create_set(cls, containers: List[ArtefactContainer]):
-        for container in containers:
-            assert isinstance(container, cls)
-            container.upload()
-        
-        yaml.dump(containers, open("/tasks/slice_discovery/problems.yaml"))
-        upload("/tasks")
-        pass 
-        
-
-    @classmethod
-    def list(cls):
-        # do the loading here, not in the init 
-        cls = yaml.load(containers, open("/tasks/slice_discovery/problems.yaml"))
-        returns cls.problems # maybe a dataframe 
-
-    @classmethod
-    def from_id(cls, container_id: str):
-        data = yaml.load(open(path, "r"))
-        artefacts = {
-            name: a["class"](artefact_id=a["id"], task_id=a["task_id"])
-            for name, a in data["artefacts"].items()
-        }
-        container = cls(
-            container_id=container_id,
-            artefacts=artefacts,
-        )
-        container.attributes = data["attributes"]
-        return container
 
     @classmethod
     def _check_artefact_spec(cls, artefacts: Mapping[str, Artefact]):

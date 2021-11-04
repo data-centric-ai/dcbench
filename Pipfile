@@ -10,6 +10,7 @@ codalab = "*"
 ipython = "*"
 
 [dev-packages]
+twine = "*"
 
 [requires]
 python_version = "3.8"

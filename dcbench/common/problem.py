@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class Problem(ArtefactContainer):
-
+    container_id = "problem"
     task_id: str
     result_metrics: Optional[List[str]] = None
 
