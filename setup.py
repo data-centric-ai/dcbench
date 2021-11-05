@@ -51,9 +51,10 @@ REQUIRED = [
 ]
 EXTRAS = {
     "dev": [
-        "black>=21.5b0",
+        "black==21.5b0",
         "isort>=5.7.0",
         "flake8>=3.8.4",
+        "mypy>=0.9",
         "docformatter>=1.4",
         "pytest-cov>=2.10.1",
         "sphinx-rtd-theme>=0.5.1",
