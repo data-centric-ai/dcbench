@@ -10,7 +10,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dcbench)](https://pypi.org/project/dcbench/)
 [![codecov](https://codecov.io/gh/data-centric-ai/dcbench/branch/main/graph/badge.svg?token=MOLQYUSYQU)](https://codecov.io/gh/data-centric-ai/dcbench)
 
-A benchmark of  aspects of improving the quality of machine learning workflows.
+A benchmark of data-centric tasks from across the machine learning lifecycle.
 
 [**Getting Started**](⚡️-Quickstart)
 | [**What is dcbench?**](💡-what-is-dcbench)
