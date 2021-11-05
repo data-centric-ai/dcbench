@@ -21,18 +21,7 @@ class Problem(ArtefactContainer):
 
     @property
     def solutions(self) -> RelationalBundle[Solution]:
-        if self._solutions is None:
-            solutions = dict(
-                (id, Solution.load(self, id)) for id in Solution.list(self)
-            )
-            all_result_attributes = set.union(
-                *[s.result.keys() for s in solutions.values() if s.result is not None]
-            )
-            attributes = ["name", "paper", "code"] + [
-                "result.%s" % a for a in sorted(all_result_attributes)
-            ]
-            self._solutions = RelationalBundle(solutions, attributes)
-        return self._solutions
+        pass
 
     @abstractmethod
     def solve(self, **kwargs: Any) -> Solution:

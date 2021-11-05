@@ -15,7 +15,7 @@ import pandas as pd
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 
-from dcbench.constants import ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR, PUBLIC_REMOTE_URL
+import dcbench.constants as constants
 
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
@@ -59,19 +59,21 @@ class Artefact(ABC):
     isdir: bool = False
 
     def __init__(self, artefact_id: str, **kwargs) -> None:
-        self.path = os.path.join(ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}")
+        self.path = os.path.join(
+            constants.ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}"
+        )
         self.id = artefact_id
         os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
         super().__init__()
 
     @property
     def local_path(self) -> str:
-        return os.path.join(LOCAL_DIR, self.path)
+        return os.path.join(constants.LOCAL_DIR, self.path)
 
     @property
     def remote_url(self) -> str:
         return os.path.join(
-            PUBLIC_REMOTE_URL, self.path + ".tar.gz" if self.isdir else ""
+            constants.PUBLIC_REMOTE_URL, self.path + ".tar.gz" if self.isdir else ""
         )
 
     @property
@@ -93,11 +95,13 @@ class Artefact(ABC):
 
         if self.isdir:
             _upload_dir_to_gcs(
-                local_path=self.local_path, bucket_name=BUCKET_NAME, gcs_path=self.path
+                local_path=self.local_path,
+                bucket_name=constants.BUCKET_NAME,
+                gcs_path=self.path,
             )
         else:
             client = storage.Client()
-            bucket = client.get_bucket(BUCKET_NAME)
+            bucket = client.get_bucket(constants.BUCKET_NAME)
             blob = bucket.blob(self.path)
             blob.upload_from_filename(self.local_path)
 
@@ -234,11 +238,11 @@ class ArtefactContainerClass(ABCMeta):
 
     @property
     def local_instances_path(self):
-        return os.path.join(LOCAL_DIR, self.instances_path)
+        return os.path.join(constants.LOCAL_DIR, self.instances_path)
 
     @property
     def remote_instances_url(self):
-        return os.path.join(PUBLIC_REMOTE_URL, self.instances_path)
+        return os.path.join(constants.PUBLIC_REMOTE_URL, self.instances_path)
 
     def write_instances(self, containers: List[ArtefactContainer]):
         for container in containers:
@@ -254,7 +258,7 @@ class ArtefactContainerClass(ABCMeta):
             if include_artefacts:
                 container.upload()
         client = storage.Client()
-        bucket = client.get_bucket(BUCKET_NAME)
+        bucket = client.get_bucket(constants.BUCKET_NAME)
         blob = bucket.blob(self.instances_path)
         blob.upload_from_filename(self.local_instances_path)
 
