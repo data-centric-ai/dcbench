@@ -1,5 +1,4 @@
-from typing import (Any, Generic, Iterator, List, Mapping, Optional, TypeVar,
-                    Union)
+from typing import Any, Generic, Iterator, List, Mapping, Optional, TypeVar, Union
 
 from pandas import DataFrame, Series
 

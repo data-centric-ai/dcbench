@@ -1,20 +1,20 @@
 import logging
 import os
-from glob import glob
 from typing import Optional
 
 import click
 
-from dcbench.common import Problem, Solution
+from dcbench.common import Solution
 
-from .constants import HIDDEN_ARTEFACTS_URL, LOCAL_DIR
+from .constants import LOCAL_DIR
 from .version import __version__
 
 __all__ = ("main",)
 _log = logging.getLogger(__name__)
 
+# flake8: noqa
 BANNER = """
-       ____  _________    ____   ____  _______   __________  __
+       ____  _________    ____   ____  _______   __________  __ 
       / __ \/ ____/   |  /  _/  / __ )/ ____/ | / / ____/ / / /
      / / / / /   / /| |  / /   / __  / __/ /  |/ / /   / /_/ / 
     / /_/ / /___/ ___ |_/ /   / /_/ / /___/ /|  / /___/ __  /  

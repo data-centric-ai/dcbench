@@ -1,9 +1,5 @@
 from typing import Any
 
-import meerkat as mk
-import torch.nn as nn
-
-from dcbench.__main__ import scenarios
 from dcbench.common.artefact import DataPanelArtefact, MeerkatDatasetArtefact
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Solution

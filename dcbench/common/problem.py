@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import os
-import urllib.parse
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Type
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from dcbench.common.bundle import RelationalBundle
 
-from ..constants import (HIDDEN_ARTEFACTS_URL, LOCAL_DIR, PROBLEMS_DIR,
-                         PUBLIC_REMOTE_URL)
-from .artefact import Artefact, ArtefactContainer
-from .download_utils import download_and_extract_archive
+from ..constants import PROBLEMS_DIR
+from .artefact import ArtefactContainer
 
 if TYPE_CHECKING:
     from .solution import Solution
@@ -43,5 +39,5 @@ class Problem(ArtefactContainer):
         raise NotImplementedError
 
     @abstractmethod
-    def evaluate(self, solution: Solution) -> Result:
+    def evaluate(self, solution: Solution):
         raise NotImplementedError

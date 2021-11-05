@@ -6,8 +6,14 @@ from typing import Any, Iterator, List, Mapping, Optional
 
 from pandas import Series
 
-from ..constants import (ARTEFACTS_DIR, METADATA_FILENAME, RESULT_FILENAME,
-                         SOLUTIONS_DIR)
+from ..common import Problem
+from ..constants import (
+    ARTEFACTS_DIR,
+    LOCAL_DIR,
+    METADATA_FILENAME,
+    RESULT_FILENAME,
+    SOLUTIONS_DIR,
+)
 from .artefact import ArtefactContainer
 from .download_utils import download_and_extract_archive
 
@@ -44,7 +50,7 @@ class Solution(ArtefactContainer):
 
     def __init__(
         self,
-        scenario: "Scenario",
+        scenario: "Problem",
         objects: Mapping[str, Any],
         id: Optional[str] = None,
         artefacts_url: Optional[str] = None,
@@ -65,40 +71,38 @@ class Solution(ArtefactContainer):
         self.code = code
         self.result = result
 
-        artefacts = dict(
-            (
-                artefact.id,
-                ArtefactInstance(
-                    artefact, container=self, object=objects.get(artefact.id, None)
-                ),
-            )
-            for artefact in scenario.solution_artefacts
-        )
-        self.artefacts = ArtefactBundle(
-            artefacts, self, [artefacts_url] if artefacts_url is not None else []
-        )
+        # artefacts = dict(
+        #     (
+        #         artefact.id,
+        #         Artefact(
+        #             artefact, container=self, object=objects.get(artefact.id, None)
+        #         ),
+        #     )
+        #     for artefact in scenario.solution_artefacts
+        # )
+        # self.artefacts = ArtefactBundle(
+        #     artefacts, self, [artefacts_url] if artefacts_url is not None else []
+        # )
 
     @property
     def location(self) -> str:
-        return os.path.join(
-            DEFAULT_WORKING_DIR, SOLUTIONS_DIR, self.scenario.id, self.id
-        )
+        return os.path.join(LOCAL_DIR, SOLUTIONS_DIR, self.scenario.id, self.id)
 
     def evaluate(self) -> "Solution":
         self.result = self.scenario.evaluate(self)
         return self
 
     @staticmethod
-    def list(scenario: "Scenario") -> List[str]:
+    def list(scenario: "Problem") -> List[str]:
         # Determine location of solutions for a specific scenario.
-        basedir = os.path.join(DEFAULT_WORKING_DIR, SOLUTIONS_DIR, scenario.id)
+        basedir = os.path.join(LOCAL_DIR, SOLUTIONS_DIR, scenario.id)
         # All child directories correspond to solution ID.
         return [f.name for f in os.scandir(basedir) if f.is_dir()]
 
     @staticmethod
-    def load(scenario: "Scenario", id: str) -> "Solution":
+    def load(scenario: "Problem", id: str) -> "Solution":
         # Determine location of this solution.
-        basedir = os.path.join(DEFAULT_WORKING_DIR, SOLUTIONS_DIR, scenario.id, id)
+        basedir = os.path.join(LOCAL_DIR, SOLUTIONS_DIR, scenario.id, id)
 
         # Load metadata.
         metadata_path = os.path.join(basedir, METADATA_FILENAME)
@@ -131,9 +135,7 @@ class Solution(ArtefactContainer):
 
     def save(self) -> None:
         # Determine location of this solution.
-        basedir = os.path.join(
-            DEFAULT_WORKING_DIR, SOLUTIONS_DIR, self.scenario.id, self.id
-        )
+        basedir = os.path.join(LOCAL_DIR, SOLUTIONS_DIR, self.scenario.id, self.id)
         os.makedirs(basedir, exist_ok=True)
 
         # Save metadata.

@@ -3,7 +3,7 @@ from typing import Any
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 
-from ...common import CsvArtefact, Scenario, Solution
+from ...common import CsvArtefact, Result, Scenario, Solution
 from .common import Preprocessor
 
 

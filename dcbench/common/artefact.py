@@ -6,7 +6,7 @@ import tempfile
 import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Mapping
-from typing import Any, Dict, Iterator, List, Optional, Type, Union
+from typing import Any, List, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
 
@@ -15,8 +15,7 @@ import pandas as pd
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 
-from dcbench.constants import (ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR,
-                               PROBLEMS_DIR, PUBLIC_REMOTE_URL)
+from dcbench.constants import ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR, PUBLIC_REMOTE_URL
 
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
