@@ -1,13 +1,14 @@
-import pandas as pd
-
 from typing import Any
+
+import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 
 from dcbench.common.artefact import CSVArtefact
 from dcbench.common.problem import Problem
-from dcbench.common.solution import Solution, Result
+from dcbench.common.solution import Result, Solution
 
 from .common import Preprocessor
+
 
 class MinicleanProblem(Problem):
 
