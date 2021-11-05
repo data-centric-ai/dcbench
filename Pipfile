@@ -3,14 +3,18 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[packages]
-dcbench = {editable = true, path = "."}
-svn = "*"
-codalab = "*"
-ipython = "*"
-
 [dev-packages]
 twine = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.8"
+
+[dev-packages.dcbench]
+path = "."
+extras = [ "dev",]
+editable = true
+
+[packages.dcbench]
+editable = true
+path = "."
