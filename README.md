@@ -28,7 +28,7 @@ pip install dcbench
 ```
 > Optional: some parts of Meerkat rely on optional dependencies. If you know which optional dependencies you'd like to install, you can do so using something like `pip install dcbench[dev]` instead. See setup.py for a full list of optional dependencies.
 
-> Installing from dev: `pip install "dcbench[dev] @ git+https://github.com/robustness-gym/meerkat@dev"`
+> Installing from dev: `pip install "dcbench[dev] @ git+https://github.com/data-centric-ai/dcbench@main"`
 
 Using a Jupyter notebook or some other interactive environment, you can import the library 
 and explore the data-centric problems in the benchmark:
