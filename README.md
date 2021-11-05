@@ -1,16 +1,16 @@
 
 <div align="center">
-    <img src="docs/banner.png" height=200 alt="banner"/>
-</div>
+    <img src="docs/banner.png" height=150 alt="banner"/>
 
 -----
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/data-centric-ai/dcbench/CI)
 ![GitHub](https://img.shields.io/github/license/data-centric-ai/dcbench)
 [![Documentation Status](https://readthedocs.org/projects/dcbench/badge/?version=latest)](https://dcbench.readthedocs.io/en/latest/?badge=latest)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dcbench)](https://pypi.org/project/dcbench/)
 [![codecov](https://codecov.io/gh/data-centric-ai/dcbench/branch/main/graph/badge.svg?token=MOLQYUSYQU)](https://codecov.io/gh/data-centric-ai/dcbench)
 
-A benchmark of  aspects of improving the quality of machine learning workflows.
+A benchmark of data-centric tasks from across the machine learning lifecycle.
 
 [**Getting Started**](⚡️-Quickstart)
 | [**What is dcbench?**](💡-what-is-dcbench)
@@ -18,6 +18,7 @@ A benchmark of  aspects of improving the quality of machine learning workflows.
 | [**Contributing**](CONTRIBUTING.md)
 | [**Website**](https://www.datacentricai.cc/)
 | [**About**](✉️-About)
+</div>
 
 
 ## ⚡️ Quickstart
@@ -25,6 +26,9 @@ A benchmark of  aspects of improving the quality of machine learning workflows.
 ```bash
 pip install dcbench
 ```
+> Optional: some parts of Meerkat rely on optional dependencies. If you know which optional dependencies you'd like to install, you can do so using something like `pip install dcbench[dev]` instead. See setup.py for a full list of optional dependencies.
+
+> Installing from dev: `pip install "dcbench[dev] @ git+https://github.com/robustness-gym/meerkat@dev"`
 
 Using a Jupyter notebook or some other interactive environment, you can import the library 
 and explore the data-centric problems in the benchmark:
