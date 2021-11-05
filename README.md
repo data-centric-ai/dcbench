@@ -10,15 +10,31 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![codecov](https://codecov.io/gh/data-centric-ai/dcbench/branch/main/graph/badge.svg?token=MOLQYUSYQU)](https://codecov.io/gh/data-centric-ai/dcbench)
 
-dcbench tests various data-centric aspects of improving the quality of machine learning workflows.
+A benchmark of  aspects of improving the quality of machine learning workflows.
 
 [**Getting Started**](⚡️-Quickstart)
-| [**What is Meerkat?**](💡-what-is-Meerkat)
-| [**Docs**](https://meerkat.readthedocs.io/en/latest/index.html)
+| [**What is dcbench?**](💡-what-is-dcbench)
+| [**Docs**](https://dcbench.readthedocs.io/en/latest/index.html)
 | [**Contributing**](CONTRIBUTING.md)
-| [**Blogpost**](https://www.notion.so/sabrieyuboglu/Meerkat-DataPanels-for-Machine-Learning-64891aca2c584f1889eb0129bb747863)
+| [**Website**](https://www.datacentricai.cc/)
 | [**About**](✉️-About)
 
+
+## ⚡️ Quickstart
+
+```bash
+pip install dcbench
+```
+
+Using a Jupyter notebook or some other interactive environment, you can import the library 
+and explore the data-centric problems in the benchmark:
+
+```python
+import dcbench
+dcbench.problem_classes
+```
+
+## 💡 What is dcbench?
 This is a benchmark that tests various data-centric aspects of improving the quality of machine learning workflows.
 
 It features a growing list of *tasks*:
@@ -29,93 +45,66 @@ It features a growing list of *tasks*:
 * Minimal training dataset selection (`minitrain`)
 
 Each task features a collection of *scenarios* which are defined by datasets and ML pipeline elements (e.g. a model, feature pre-processors, etc.)
+## ⚙️ How does it work?
+### `Problem`
 
-## Basic Usage
+This benchmark is a collection of *data-centric problems*. *What is a data-centric problem?* A useful analogy is: chess problems are to a full chess game as *data-centric* *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label cleaning phase where labels are audited and corrected. Therefore, our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned. 
 
-The very first step is to install the PyPI package:
+The benchmark supports a diverse set of problems that may look very different from one another. For example, a slice discovery problem has different inputs and outputs than a data cleaning problem. To deal with this, we group problems by *problem class.*  In `dcbench`, each problem class is represented by a subclass of `Problem` (*e.g.* `SliceDiscoveryProblem`, `MiniCleanProblem`). The problems themselves are represented by instances of these subclasses. 
 
-```bash
-pip install dcai
-```
-
-Then, we advise using Jupyter notebooks or some other interactive environment. You start off by importing the library and listing all the available artefacts:
+We can get a list all of the problem classes  in `dcbench` with:
 
 ```python
-from dcai import scenarios
+import dcbench
+dcbench.problem_classes
 
-scenarios.list()
+# OUT: 
+[SliceDiscoveryProblem, MiniCleanProblem]
 ```
 
-You can then load a specific scenario and view its *artefacts*:
+`dcbench` includes a set of problems for each task. We can list them with: 
 
 ```python
-scenario = scenarios.get("miniclean/bank")
-scenario.artefacts
+from dcbench import SliceDiscoveryProblem
+SliceDiscoveryProblem.instances
+
+# Out: TODO, get the actual dataframe output here 
+dataframe
 ```
 
-In the above example we are loading the `bank` scenario of the `miniclean` task. We can then load all the artefacts into a dictionary:
+We can get one of these problems with 
 
 ```python
-a = scenario.artefacts.load()
+problem = SliceDiscoveryProblem.from_id("eda4")
 ```
 
-This automatically downloads all the available artefacts, saves a local copy and loads it into memory. Artefacts can be accessed directly from the dictionary. We can then go ahead and write the code that will provide us with a scenario-specific solution:
+### `Artefact`
+
+Each *problem* is made up of a set of artefacts: a dataset with labels to clean, a dataset and a model to perform error analysis on. In `dcbench` , these artefacts are represented by instances of `Artefact`. We can think of each `Problem` object as a container for `Artefact` objects. 
 
 ```python
-model.fit(a["X_train_dirty"], a["y_train"])
+problem.artefacts
 
-X_train_selection = ...
+# Out: 
+{
+	"dataset": CSVArtefact()
+}
+
+artefact: CSVArtefact = problem["dataset"]
 ```
 
-Once we have an object (e.g. `X_train_selection`) containing the scenario-specific solution, we can package it into a solution object:
+Note that `Artefact` objects don't actually hold their underlying data in memory. Instead, they hold pointers to where the `Artefact` lives in [dcbench cloud storage](https://console.cloud.google.com/storage/browser/dcbench?authuser=1&project=hai-gcp-fine-grained&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) and, if it's been downloaded,  where it lives locally on disk. This makes the `Problem` objects very lightweight.  
+
+**Downloading to disk.** By default, `dcbench` downloads artefacts to `~/.dcbench/artefacts` but this can be configured in the dcbench settings TODO: add support for configuration. To download an `Artefact`  via the Python API, use `artefact.download()`. You can also download all the artefacts in a problem with `problem.download()`.
+
+**Loading into memory.** `dcbench` includes loading functionality for each artefact type. To load an artefact into memory you can use `artefact.load()` . Note that this will also download the artefact if it hasn't yet been downloaded. 
+
+Finally,  we should point out that `problem` is a Python mapping, so we can index it directly to load artefacts.  
 
 ```python
-solution = scenario.solve(X_train_selection=X_train_selection)
+# this is equivalent to problem.artefacts["dataset"].load()
+df: pd.DataFrame = problem["dataset"] 
 ```
 
-We can then perform an evaluation on that solution that will give us the result:
-
-```python
-solution.evaluate()
-solution.result
-```
-
-After you're happy with the obtained result, you can bundle your solution artefacts and see their location.
-
-```python
-solution.save()
-solution.location
-```
-
-After obtaining the `/path/to/your/artefacts` you can upload it as a bundle to [CodaLab](https://codalab.org/):
-
-```bash
-cl upload /path/to/your/artefacts
-```
-
-This command will display the URL of your uploaded bundle. It assumes that you have a user account on CodaLab ([click here](https://codalab-worksheets.readthedocs.io/en/latest/features/bundles/uploading/) for more info).
-
-After that, you simply go to our [FORM LINK](#), fill it in with all required details and paste the bundle link so we can run a full evaluation on it.
-
-Congratulations! Your solution is now uploaded to our system and after evaluation it will show up on the [leaderboard](#).
-
-## Adding a Submitted solution to the Repo
-
-This step is performed manually by us (although it could be possible to automate). It looks like this:
-
-```bash
-dcai add-solution \
-    --scenario miniclean/bank \
-    --name MySolution \
-    --paper https://arxiv.org/abs/... \
-    --code https://github.com/... \
-    --artefacts-url https://worksheets.codalab.org/rest/bundles/...
-```
-
-## Performing the Full Evaluation
-
-This step is performed by GitHub Actions and is triggered after each commit.
-
-```bash
-dcai evaluate --leaderboard-output /path/to/leaderboard/dir
-```
+## ✉️ About
+`dcbench` is being developed alongside the data-centric-ai benchmark. Reach out to Bojan Karlaš (karlasb [at] inf [dot] ethz [dot] ch) and Sabri Eyuboglu (eyuboglu [at] stanford [dot] edu if you would like to get involved or contribute!)
