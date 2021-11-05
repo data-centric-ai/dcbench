@@ -90,7 +90,7 @@ jobs:
     
             -   name: Install Dependencies
                 run: |
-                    pip install -e "."
+                    pip install -e ".[dev]"
                     
             -   name: Test with pytest
                 run: |
