@@ -2,17 +2,13 @@ import json
 import os
 import random
 import string
+from typing import Any, Iterator, List, Mapping, Optional
 
 from pandas import Series
-from typing import Mapping, Optional, List, Any, Iterator
 
+from ..constants import (ARTEFACTS_DIR, METADATA_FILENAME, RESULT_FILENAME,
+                         SOLUTIONS_DIR)
 from .artefact import ArtefactContainer
-from ..constants import (
-    METADATA_FILENAME,
-    RESULT_FILENAME,
-    SOLUTIONS_DIR,
-    ARTEFACTS_DIR,
-)
 from .download_utils import download_and_extract_archive
 
 
@@ -43,7 +39,7 @@ class Result(Mapping):
 
 
 class Solution(ArtefactContainer):
-    
+
     container_dir = SOLUTIONS_DIR
 
     def __init__(

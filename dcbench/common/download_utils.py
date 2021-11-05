@@ -1,9 +1,8 @@
-"""
-This file contains utility functions for downloading datasets.
-The code in this file is taken from the torchvision package,
-specifically, https://github.com/pytorch/vision/blob/master/torchvision/datasets/utils.py.
-We package it here to avoid users having to install the rest of torchvision.
-It is licensed under the following license:
+"""This file contains utility functions for downloading datasets. The code in
+this file is taken from the torchvision package, specifically,
+https://github.com/pytorch/vision/blob/master/torchvision/datasets/utils.py. We
+package it here to avoid users having to install the rest of torchvision. It is
+licensed under the following license:
 
 BSD 3-Clause License
 
@@ -36,23 +35,23 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import errno
+import gzip
+import hashlib
 import os
 import os.path
-import hashlib
-import gzip
-import errno
+import tarfile
 import urllib
 import urllib.error
 import urllib.request
-import tarfile
 import zipfile
+from typing import Any, Callable, Iterable, List, Optional, TypeVar
 
 from tqdm import tqdm
-from typing import Any, Callable, List, Iterable, Optional, TypeVar
 
 
 def gen_bar_updater(total) -> Callable[[int, int, int], None]:
-    pbar = tqdm(total=total, unit='Byte')
+    pbar = tqdm(total=total, unit="Byte")
 
     def bar_update(count, block_size, total_size):
         if pbar.total is None and total_size:
@@ -65,8 +64,8 @@ def gen_bar_updater(total) -> Callable[[int, int, int], None]:
 
 def calculate_md5(fpath: str, chunk_size: int = 1024 * 1024) -> str:
     md5 = hashlib.md5()
-    with open(fpath, 'rb') as f:
-        for chunk in iter(lambda: f.read(chunk_size), b''):
+    with open(fpath, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
             md5.update(chunk)
     return md5.hexdigest()
 
@@ -83,7 +82,13 @@ def check_integrity(fpath: str, md5: Optional[str] = None) -> bool:
     return check_md5(fpath, md5)
 
 
-def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optional[str] = None, size: Optional[int] = None) -> None:
+def download_url(
+    url: str,
+    root: str,
+    filename: Optional[str] = None,
+    md5: Optional[str] = None,
+    size: Optional[int] = None,
+) -> None:
     """Download a file from a url and place it in root.
 
     Args:
@@ -95,7 +100,7 @@ def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optio
 
     root = os.path.expanduser(root)
     if not filename:
-        req = urllib.request.Request(url, method='HEAD')
+        req = urllib.request.Request(url, method="HEAD")
         r = urllib.request.urlopen(req)
         filename = r.info().get_filename()
     if not filename:
@@ -106,24 +111,20 @@ def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optio
 
     # check if file is already present locally
     if check_integrity(fpath, md5):
-        print('Using downloaded and verified file: ' + fpath)
-    else:   # download the file
+        print("Using downloaded and verified file: " + fpath)
+    else:  # download the file
         try:
-            print('Downloading ' + url + ' to ' + fpath)
-            with urllib.request.urlopen('http://www.example.com/') as f:
-                urllib.request.urlretrieve(
-                    url, fpath,
-                    reporthook=gen_bar_updater(size)
-                )
+            print("Downloading " + url + " to " + fpath)
+            with urllib.request.urlopen("http://www.example.com/") as f:
+                urllib.request.urlretrieve(url, fpath, reporthook=gen_bar_updater(size))
         except (urllib.error.URLError, IOError) as e:  # type: ignore[attr-defined]
-            if url[:5] == 'https':
-                url = url.replace('https:', 'http:')
-                print('Failed download. Trying https -> http instead.'
-                      ' Downloading ' + url + ' to ' + fpath)
-                urllib.request.urlretrieve(
-                    url, fpath,
-                    reporthook=gen_bar_updater(size)
+            if url[:5] == "https":
+                url = url.replace("https:", "http:")
+                print(
+                    "Failed download. Trying https -> http instead."
+                    " Downloading " + url + " to " + fpath
                 )
+                urllib.request.urlretrieve(url, fpath, reporthook=gen_bar_updater(size))
             else:
                 raise e
         # check integrity of downloaded file
@@ -132,7 +133,7 @@ def download_url(url: str, root: str, filename: Optional[str] = None, md5: Optio
 
 
 def list_dir(root: str, prefix: bool = False) -> List[str]:
-    """List all directories at a given root
+    """List all directories at a given root.
 
     Args:
         root (str): Path to directory whose folders need to be listed
@@ -147,7 +148,7 @@ def list_dir(root: str, prefix: bool = False) -> List[str]:
 
 
 def list_files(root: str, suffix: str, prefix: bool = False) -> List[str]:
-    """List all files ending with a suffix at a given root
+    """List all files ending with a suffix at a given root.
 
     Args:
         root (str): Path to directory whose folders need to be listed
@@ -157,7 +158,11 @@ def list_files(root: str, suffix: str, prefix: bool = False) -> List[str]:
             only returns the name of the files found
     """
     root = os.path.expanduser(root)
-    files = [p for p in os.listdir(root) if os.path.isfile(os.path.join(root, p)) and p.endswith(suffix)]
+    files = [
+        p
+        for p in os.listdir(root)
+        if os.path.isfile(os.path.join(root, p)) and p.endswith(suffix)
+    ]
     if prefix is True:
         files = [os.path.join(root, d) for d in files]
     return files
@@ -167,7 +172,9 @@ def _quota_exceeded(response: "requests.models.Response") -> bool:  # type: igno
     return "Google Drive - Quota exceeded" in response.text
 
 
-def download_file_from_google_drive(file_id: str, root: str, filename: Optional[str] = None, md5: Optional[str] = None):
+def download_file_from_google_drive(
+    file_id: str, root: str, filename: Optional[str] = None, md5: Optional[str] = None
+):
     """Download a Google Drive file from  and place it in root.
 
     Args:
@@ -178,6 +185,7 @@ def download_file_from_google_drive(file_id: str, root: str, filename: Optional[
     """
     # Based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
     import requests
+
     url = "https://docs.google.com/uc?export=download"
 
     root = os.path.expanduser(root)
@@ -188,15 +196,15 @@ def download_file_from_google_drive(file_id: str, root: str, filename: Optional[
     os.makedirs(root, exist_ok=True)
 
     if os.path.isfile(fpath) and check_integrity(fpath, md5):
-        print('Using downloaded and verified file: ' + fpath)
+        print("Using downloaded and verified file: " + fpath)
     else:
         session = requests.Session()
 
-        response = session.get(url, params={'id': file_id}, stream=True)
+        response = session.get(url, params={"id": file_id}, stream=True)
         token = _get_confirm_token(response)
 
         if token:
-            params = {'id': file_id, 'confirm': token}
+            params = {"id": file_id, "confirm": token}
             response = session.get(url, params=params, stream=True)
 
         if _quota_exceeded(response):
@@ -212,14 +220,16 @@ def download_file_from_google_drive(file_id: str, root: str, filename: Optional[
 
 def _get_confirm_token(response: "requests.models.Response") -> Optional[str]:  # type: ignore[name-defined]
     for key, value in response.cookies.items():
-        if key.startswith('download_warning'):
+        if key.startswith("download_warning"):
             return value
 
     return None
 
 
 def _save_response_content(
-    response: "requests.models.Response", destination: str, chunk_size: int = 32768,  # type: ignore[name-defined]
+    response: "requests.models.Response",
+    destination: str,
+    chunk_size: int = 32768,  # type: ignore[name-defined]
 ) -> None:
     with open(destination, "wb") as f:
         pbar = tqdm(total=None)
@@ -256,25 +266,29 @@ def _is_zip(filename: str) -> bool:
     return filename.endswith(".zip")
 
 
-def extract_archive(from_path: str, to_path: Optional[str] = None, remove_finished: bool = False) -> None:
+def extract_archive(
+    from_path: str, to_path: Optional[str] = None, remove_finished: bool = False
+) -> None:
     if to_path is None:
         to_path = os.path.dirname(from_path)
 
     if _is_tar(from_path):
-        with tarfile.open(from_path, 'r') as tar:
+        with tarfile.open(from_path, "r") as tar:
             tar.extractall(path=to_path)
     elif _is_targz(from_path) or _is_tgz(from_path):
-        with tarfile.open(from_path, 'r:gz') as tar:
+        with tarfile.open(from_path, "r:gz") as tar:
             tar.extractall(path=to_path)
     elif _is_tarxz(from_path):
-        with tarfile.open(from_path, 'r:xz') as tar:
+        with tarfile.open(from_path, "r:xz") as tar:
             tar.extractall(path=to_path)
     elif _is_gzip(from_path):
-        to_path = os.path.join(to_path, os.path.splitext(os.path.basename(from_path))[0])
+        to_path = os.path.join(
+            to_path, os.path.splitext(os.path.basename(from_path))[0]
+        )
         with open(to_path, "wb") as out_f, gzip.GzipFile(from_path) as zip_f:
             out_f.write(zip_f.read())
     elif _is_zip(from_path):
-        with zipfile.ZipFile(from_path, 'r') as z:
+        with zipfile.ZipFile(from_path, "r") as z:
             z.extractall(to_path)
     else:
         raise ValueError("Extraction of {} not supported".format(from_path))
@@ -290,13 +304,13 @@ def download_and_extract_archive(
     filename: Optional[str] = None,
     md5: Optional[str] = None,
     remove_finished: bool = False,
-    size: Optional[int] = None
+    size: Optional[int] = None,
 ) -> None:
     download_root = os.path.expanduser(download_root)
     if extract_root is None:
         extract_root = download_root
     if not filename:
-        req = urllib.request.Request(url, method='HEAD')
+        req = urllib.request.Request(url, method="HEAD")
         r = urllib.request.urlopen(req)
         filename = r.info().get_filename()
     if not filename:
@@ -317,7 +331,10 @@ T = TypeVar("T", str, bytes)
 
 
 def verify_str_arg(
-    value: T, arg: Optional[str] = None, valid_values: Iterable[T] = None, custom_msg: Optional[str] = None,
+    value: T,
+    arg: Optional[str] = None,
+    valid_values: Iterable[T] = None,
+    custom_msg: Optional[str] = None,
 ) -> T:
     if not isinstance(value, torch._six.string_classes):
         if arg is None:
@@ -334,10 +351,13 @@ def verify_str_arg(
         if custom_msg is not None:
             msg = custom_msg
         else:
-            msg = ("Unknown value '{value}' for argument {arg}. "
-                   "Valid values are {{{valid_values}}}.")
-            msg = msg.format(value=value, arg=arg,
-                             valid_values=iterable_to_str(valid_values))
+            msg = (
+                "Unknown value '{value}' for argument {arg}. "
+                "Valid values are {{{valid_values}}}."
+            )
+            msg = msg.format(
+                value=value, arg=arg, valid_values=iterable_to_str(valid_values)
+            )
         raise ValueError(msg)
 
     return value

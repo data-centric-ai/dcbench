@@ -1,4 +1,23 @@
-# Data-Centric AI Benchmark
+
+<div align="center">
+    <img src="docs/banner.png" height=200 alt="banner"/>
+</div>
+
+-----
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/data-centric-ai/dcbench/CI)
+![GitHub](https://img.shields.io/github/license/data-centric-ai/dcbench)
+[![Documentation Status](https://readthedocs.org/projects/dcbench/badge/?version=latest)](https://dcbench.readthedocs.io/en/latest/?badge=latest)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![codecov](https://codecov.io/gh/data-centric-ai/dcbench/branch/main/graph/badge.svg?token=MOLQYUSYQU)](https://codecov.io/gh/data-centric-ai/dcbench)
+
+dcbench tests various data-centric aspects of improving the quality of machine learning workflows.
+
+[**Getting Started**](⚡️-Quickstart)
+| [**What is Meerkat?**](💡-what-is-Meerkat)
+| [**Docs**](https://meerkat.readthedocs.io/en/latest/index.html)
+| [**Contributing**](CONTRIBUTING.md)
+| [**Blogpost**](https://www.notion.so/sabrieyuboglu/Meerkat-DataPanels-for-Machine-Learning-64891aca2c584f1889eb0129bb747863)
+| [**About**](✉️-About)
 
 This is a benchmark that tests various data-centric aspects of improving the quality of machine learning workflows.
 

@@ -1,11 +1,10 @@
-import pandas as pd
-
-from sklearn.neighbors import KNeighborsClassifier
 from typing import Any
 
+import pandas as pd
+from sklearn.neighbors import KNeighborsClassifier
 
+from ...common import CsvArtefact, Scenario, Solution
 from .common import Preprocessor
-from ...common import Scenario, Solution, CsvArtefact
 
 
 class Bank(Scenario, id="miniclean/bank"):

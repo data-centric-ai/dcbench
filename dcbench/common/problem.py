@@ -1,20 +1,15 @@
 from __future__ import annotations
+
 import os
 import urllib.parse
-
 from abc import abstractmethod
-from typing import Mapping, Optional, List, Any, Type, TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Type
 
 from dcbench.common.bundle import RelationalBundle
 
+from ..constants import (HIDDEN_ARTEFACTS_URL, LOCAL_DIR, PROBLEMS_DIR,
+                         PUBLIC_REMOTE_URL)
 from .artefact import Artefact, ArtefactContainer
-from ..constants import (
-    LOCAL_DIR,
-    PROBLEMS_DIR,
-    PUBLIC_REMOTE_URL,
-    HIDDEN_ARTEFACTS_URL,
-)
 from .download_utils import download_and_extract_archive
 
 if TYPE_CHECKING:
@@ -27,7 +22,6 @@ class Problem(ArtefactContainer):
     result_metrics: Optional[List[str]] = None
 
     container_dir = PROBLEMS_DIR
-
 
     @property
     def solutions(self) -> RelationalBundle[Solution]:
@@ -43,10 +37,6 @@ class Problem(ArtefactContainer):
             ]
             self._solutions = RelationalBundle(solutions, attributes)
         return self._solutions
-
-    @classmethod
-    def list(cls) -> List[str]:
-        raise NotImplementedError
 
     @abstractmethod
     def solve(self, **kwargs: Any) -> Solution:

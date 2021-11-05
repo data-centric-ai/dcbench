@@ -1,14 +1,12 @@
 from typing import Any
-import meerkat as mk
 
+import meerkat as mk
 import torch.nn as nn
 
 from dcbench.__main__ import scenarios
-from dcbench.common.solution import Solution
-from dcbench.common.artefact import (
-    DataPanelArtefact,
-)
+from dcbench.common.artefact import DataPanelArtefact, MeerkatDatasetArtefact
 from dcbench.common.problem import Problem
+from dcbench.common.solution import Solution
 
 
 class SliceDiscoveryProblem(Problem):
@@ -18,7 +16,8 @@ class SliceDiscoveryProblem(Problem):
     artefact_spec = {
         "dataset": DataPanelArtefact,
         "predictions": DataPanelArtefact,
-        "activations": DataPanelArtefact
+        "activations": DataPanelArtefact,
+        "base_dataset": MeerkatDatasetArtefact,
     }
 
     task_id: str = "slice_discovery"

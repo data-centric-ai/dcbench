@@ -1,14 +1,14 @@
-from glob import glob
-import click
 import logging
 import os
-
+from glob import glob
 from typing import Optional
 
+import click
+
 from dcbench.common import Problem, Solution
+
 from .constants import HIDDEN_ARTEFACTS_URL, LOCAL_DIR
 from .version import __version__
-
 
 __all__ = ("main",)
 _log = logging.getLogger(__name__)
@@ -50,7 +50,8 @@ def main(
     working_dir: Optional[str] = None,
     **kwargs
 ):
-    """Collection of benchmarks that test various aspects of ML data preprocessing and management."""
+    """Collection of benchmarks that test various aspects of ML data
+    preprocessing and management."""
     global HIDDEN_ARTEFACTS_URL
     HIDDEN_ARTEFACTS_URL = hidden_artefacts_url
     global LOCAL_DIR

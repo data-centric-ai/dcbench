@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-
 LOCAL_DIR = os.path.join(Path.home(), ".dcbench")
 BUCKET_NAME = "dcbench"
 HIDDEN_BUCKET_NAME = "dcbench-hidden"

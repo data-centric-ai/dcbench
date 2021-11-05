@@ -1,28 +1,22 @@
 from __future__ import annotations
+
 import os
-import pandas as pd
-import meerkat as mk
-
-import uuid
-from urllib.request import urlretrieve, urlopen
-from urllib.error import HTTPError
-import yaml
-import tempfile
 import subprocess
-
+import tempfile
+import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Mapping
-from typing import Any, Dict, Optional, Type, Iterator, List, Union
+from typing import Any, Dict, Iterator, List, Optional, Type, Union
+from urllib.error import HTTPError
+from urllib.request import urlopen, urlretrieve
 
+import meerkat as mk
+import pandas as pd
+import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 
-from dcbench.constants import (
-    ARTEFACTS_DIR,
-    BUCKET_NAME,
-    LOCAL_DIR,
-    PROBLEMS_DIR,
-    PUBLIC_REMOTE_URL,
-)
+from dcbench.constants import (ARTEFACTS_DIR, BUCKET_NAME, LOCAL_DIR,
+                               PROBLEMS_DIR, PUBLIC_REMOTE_URL)
 
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
@@ -92,7 +86,7 @@ class Artefact(ABC):
     def upload(self, force: bool = False):
         if not os.path.exists(self.local_path):
             raise ValueError(
-                "Could not find Artefact to upload. "
+                f"Could not find Artefact to upload at '{self.local_path}'. "
                 "Are you sure it is stored locally?"
             )
         if self.is_uploaded and not force:
@@ -125,7 +119,7 @@ class Artefact(ABC):
     def _ensure_downloaded(self):
         if not self.is_downloaded:
             raise ValueError(
-                "Cannot load Artefact that has not been downloaded."
+                "Cannot load Artefact that has not been downloaded. "
                 "Call `artefact.download()`."
             )
 
@@ -141,15 +135,26 @@ class Artefact(ABC):
     def from_data(cls, data: any, artefact_id: str = None):
         if artefact_id is None:
             artefact_id = uuid.uuid4().hex
-
         # TODO ():At some point we should probably enforce that ids are unique
+
+        if cls is Artefact:
+            # if called on base class, infer which class to use
+            if isinstance(data, mk.DataPanel):
+                cls = DataPanelArtefact
+            elif isinstance(data, pd.DataFrame):
+                cls = CSVArtefact
+            else:
+                raise ValueError(
+                    f"No Artefact in dcbench for object of type {type(data)}"
+                )
+
         artefact = cls(artefact_id=artefact_id)
         artefact.save(data)
         return artefact
 
     @staticmethod
     def from_yaml(loader: yaml.Loader, node):
-        data = loader.construct_mapping(node)
+        data = loader.construct_mapping(node, deep=True)
         return data["class"](artefact_id=data["artefact_id"])
 
     @staticmethod
@@ -190,6 +195,22 @@ class DataPanelArtefact(Artefact):
 
     def save(self, data: mk.DataPanel) -> None:
         return data.write(self.local_path)
+
+
+class MeerkatDatasetArtefact(DataPanelArtefact):
+
+    DEFAULT_EXT: str = "mk"
+    isdir: bool = True
+
+    @classmethod
+    def from_name(cls, name: str):
+        dp = mk.datasets.get(name)
+        artefact = cls.from_data(data=dp, artefact_id=name)
+        return artefact
+
+    def download(self, force: bool = False):
+        mk.datasets.get(self.id)
+        return super().download(force=force)
 
 
 class ModelArtefact(Artefact):
@@ -286,9 +307,10 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         artefacts: Mapping[str, Artefact],
         attributes: Mapping[str, BASIC_TYPE] = None,
     ):
+        self.container_id = container_id
+        artefacts = self._create_artefacts(artefacts=artefacts)
         self._check_artefact_spec(artefacts=artefacts)
         self.artefacts = artefacts
-        self.container_id = container_id
         if attributes is None:
             attributes = {}
         self.attributes = attributes
@@ -338,6 +360,16 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         for artefact in self.artefacts.values():
             artefact.download(force=force)
 
+    def _create_artefacts(self, artefacts: Mapping[str, Artefact]):
+        return {
+            name: artefact
+            if isinstance(artefact, Artefact)
+            else Artefact.from_data(
+                data=artefact, artefact_id=os.path.join(self.container_id, name)
+            )
+            for name, artefact in artefacts.items()
+        }
+
     @classmethod
     def _check_artefact_spec(cls, artefacts: Mapping[str, Artefact]):
         for name, artefact in artefacts.items():
@@ -357,7 +389,7 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
 
     @staticmethod
     def from_yaml(loader: yaml.Loader, node):
-        data = loader.construct_mapping(node)
+        data = loader.construct_mapping(node, deep=True)
         return data["class"](
             container_id=data["container_id"],
             artefacts=data["artefacts"],

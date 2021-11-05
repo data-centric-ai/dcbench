@@ -1,7 +1,8 @@
-import ray
-import pandas as pd
-
 from typing import List
+
+import pandas as pd
+import ray
+
 from dcbench.common.method import Method
 from dcbench.common.scenario import Scenario
 
@@ -10,7 +11,7 @@ from dcbench.common.scenario import Scenario
 def _solve_scenario(scenario: Scenario, method: Method):
     solution = scenario.solve(method)
     solution.dump()
-    return solution 
+    return solution
 
 
 def solve(scenarios: ProblemSet, methods: List[Method]) -> pd.DataFrame:
