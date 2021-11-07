@@ -35,35 +35,33 @@ and explore the data-centric problems in the benchmark:
 
 ```python
 import dcbench
-dcbench.problem_classes
+dcbench.tasks
 ```
 
 ## 💡 What is dcbench?
-This is a benchmark that tests various data-centric aspects of improving the quality of machine learning workflows.
+This benchmark evaluates data-centric aspects of improving the quality of machine learning workflows.
 
-It features a growing list of *tasks*:
+It features a growing list of data-centric *tasks*:
 
 * Minimal data cleaning (`miniclean`)
-* Task-specific Label Correction (`labelfix`)
-* Discovery of validation Error Modalities (`errmod`)
+* Label Correction (`labelfix`)
+* Slice Discovery (`errmod`)
 * Minimal training dataset selection (`minitrain`)
 
-Each task features a collection of *scenarios* which are defined by datasets and ML pipeline elements (e.g. a model, feature pre-processors, etc.)
+Each task features a a collection of *problems*. *What is a problem?* A useful analogy is: chess problems are to a full chess game as *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label correction phase where labels are audited and fixed. Our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned. 
 ## ⚙️ How does it work?
 ### `Problem`
 
-This benchmark is a collection of *data-centric problems*. *What is a data-centric problem?* A useful analogy is: chess problems are to a full chess game as *data-centric* *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label cleaning phase where labels are audited and corrected. Therefore, our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned. 
-
-The benchmark supports a diverse set of problems that may look very different from one another. For example, a slice discovery problem has different inputs and outputs than a data cleaning problem. To deal with this, we group problems by *problem class.*  In `dcbench`, each problem class is represented by a subclass of `Problem` (*e.g.* `SliceDiscoveryProblem`, `MiniCleanProblem`). The problems themselves are represented by instances of these subclasses. 
+The benchmark supports a diverse set of problems that may look very different from one another. For example, a slice discovery problem has different inputs and outputs than a data cleaning problem. To deal with this, we group problems by *task.*  In `dcbench`, each task is represented by a subclass of `Problem` (*e.g.* `SliceDiscoveryProblem`, `MinicleanProblem`). The problems themselves are represented by instances of these subclasses. 
 
 We can get a list all of the problem classes  in `dcbench` with:
 
 ```python
 import dcbench
-dcbench.problem_classes
+dcbench.tasks
 
 # OUT: 
-[SliceDiscoveryProblem, MiniCleanProblem]
+[<class 'dcbench.tasks.miniclean.problem.MinicleanProblem'>, <class 'dcbench.tasks.slice.SliceDiscoveryProblem'>]
 ```
 
 `dcbench` includes a set of problems for each task. We can list them with: 

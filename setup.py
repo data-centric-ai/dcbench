@@ -27,7 +27,7 @@ DESCRIPTION = (
 URL = ""
 EMAIL = "sabri@eyuboglu.us"
 AUTHOR = "https://github.com/data-centric-ai/dcbench"
-REQUIRES_PYTHON = ">=3.8.0"
+REQUIRES_PYTHON = ">=3.7.0"
 VERSION = main_ns["__version__"]
 
 REQUIRED = [
@@ -154,6 +154,7 @@ setup(
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",

@@ -10,21 +10,20 @@ from typing import Any, List, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
 
+import google.cloud.storage as storage
 import meerkat as mk
 import pandas as pd
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
+from tqdm import tqdm
 
 import dcbench.constants as constants
 
-storage = LazyLoader("google.cloud.storage")
+# storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
 
 
-def _upload_dir_to_gcs(local_path: str, bucket_name: str, gcs_path: str):
-
-    client = storage.Client()
-    bucket = client.get_bucket(bucket_name)
+def _upload_dir_to_gcs(local_path: str, gcs_path: str, bucket: storage.Bucket):
     assert os.path.isdir(local_path)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -84,7 +83,7 @@ class Artefact(ABC):
     def is_uploaded(self) -> bool:
         return _url_exists(self.remote_url)
 
-    def upload(self, force: bool = False):
+    def upload(self, force: bool = False, bucket: storage.Bucket = None):
         if not os.path.exists(self.local_path):
             raise ValueError(
                 f"Could not find Artefact to upload at '{self.local_path}'. "
@@ -93,15 +92,17 @@ class Artefact(ABC):
         if self.is_uploaded and not force:
             return
 
+        if bucket is None:
+            client = storage.Client()
+            bucket = client.get_bucket(constants.BUCKET_NAME)
+
         if self.isdir:
             _upload_dir_to_gcs(
                 local_path=self.local_path,
-                bucket_name=constants.BUCKET_NAME,
+                bucket=bucket,
                 gcs_path=self.path,
             )
         else:
-            client = storage.Client()
-            bucket = client.get_bucket(constants.BUCKET_NAME)
             blob = bucket.blob(self.path)
             blob.upload_from_filename(self.local_path)
 
@@ -208,6 +209,8 @@ class MeerkatDatasetArtefact(DataPanelArtefact):
     @classmethod
     def from_name(cls, name: str):
         dp = mk.datasets.get(name)
+        if name == "celeba":
+            dp = dp[["image", "identity", "image_id", "split"]]
         artefact = cls.from_data(data=dp, artefact_id=name)
         return artefact
 
@@ -253,12 +256,12 @@ class ArtefactContainerClass(ABCMeta):
         yaml.dump(containers, open(self.local_instances_path, "w"))
 
     def upload_instances(self, include_artefacts: bool = False):
-        for container in self.instances:
-            assert isinstance(container, self)
-            if include_artefacts:
-                container.upload()
         client = storage.Client()
         bucket = client.get_bucket(constants.BUCKET_NAME)
+        for container in tqdm(self.instances):
+            assert isinstance(container, self)
+            if include_artefacts:
+                container.upload(bucket=bucket)
         blob = bucket.blob(self.instances_path)
         blob.upload_from_filename(self.local_instances_path)
 
@@ -270,6 +273,14 @@ class ArtefactContainerClass(ABCMeta):
             assert isinstance(container, self)
             if include_artefacts:
                 container.upload()
+
+    def describe_instances(self):
+        return pd.DataFrame(
+            [
+                {"id": problem.container_id, **problem.attributes}
+                for problem in self.instances
+            ]
+        )
 
     @property
     def instances(self):
@@ -316,7 +327,7 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         self.artefacts = artefacts
         if attributes is None:
             attributes = {}
-        self.attributes = attributes
+        self._attributes = attributes
 
     @classmethod
     def from_artefacts(
@@ -355,9 +366,13 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
     def is_uploaded(self) -> bool:
         return all(x.is_uploaded for x in self.artefacts.values())
 
-    def upload(self):
+    def upload(self, force: bool = False, bucket: storage.Bucket = None):
+        if bucket is None:
+            client = storage.Client()
+            bucket = client.get_bucket(constants.BUCKET_NAME)
+
         for artefact in self.artefacts.values():
-            artefact.upload()
+            artefact.upload(force=force, bucket=bucket)
 
     def download(self, force: bool = False) -> bool:
         for artefact in self.artefacts.values():
@@ -404,10 +419,17 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         data = {
             "class": type(data),
             "container_id": data.container_id,
-            "attributes": data.attributes,
+            "attributes": data._attributes,
             "artefacts": data.artefacts,
         }
         return dumper.represent_mapping("!ArtefactContainer", data)
+
+    def __repr__(self):
+        artefacts = {k: v.__class__.__name__ for k, v in self.artefacts.items()}
+        return (
+            f"{self.__class__.__name__}(artefacts={artefacts}, "
+            f"attributes={self.attributes})"
+        )
 
 
 yaml.add_multi_representer(ArtefactContainer, ArtefactContainer.to_yaml)
