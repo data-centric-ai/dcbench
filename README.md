@@ -12,8 +12,8 @@
 
 A benchmark of data-centric tasks from across the machine learning lifecycle.
 
-[**Getting Started**](⚡️-Quickstart)
-| [**What is dcbench?**](💡-what-is-dcbench)
+[**Getting Started**](#%EF%B8%8F-quickstart)
+| [**What is dcbench?**](#-what-is-dcbench)
 | [**Docs**](https://dcbench.readthedocs.io/en/latest/index.html)
 | [**Contributing**](CONTRIBUTING.md)
 | [**Website**](https://www.datacentricai.cc/)
