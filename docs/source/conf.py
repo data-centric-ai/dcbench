@@ -10,9 +10,19 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+from pathlib import Path
+
+version_path = Path(__file__).parent.parent.parent / "dcbench" / "version.py"
+metadata = {}
+with open(str(version_path)) as ver_file:
+    exec(ver_file.read(), metadata)
+
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../.."))
+sys.setrecursionlimit(1500)
 
 
 # -- Project information -----------------------------------------------------
@@ -27,7 +37,18 @@ author = "Data Centric AI"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autodoc.typehints",
+    "sphinx.ext.autosummary",
+    "sphinx_rtd_theme",
+    "nbsphinx",
+    "recommonmark",
+]
+autodoc_typehints = "description"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -45,7 +66,14 @@ exclude_patterns = []
 #
 html_theme = "alabaster"
 
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+# The name of an image file (relative to this directory) to place at the top of
+# the title page.
+html_logo = "../assets/logo.png"
+
+html_theme_options = {}

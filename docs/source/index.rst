@@ -1,20 +1,35 @@
-.. dcbench documentation master file, created by
-   sphinx-quickstart on Sun Nov  7 13:19:06 2021.
+.. DCBench documentation master file, created by
+   sphinx-quickstart on Fri Jan  1 16:41:09 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to dcbench's documentation!
-===================================
+Welcome to dcbench
+==========================================
+
+.. _Issues: https://github.com/data-centric-ai/dcbench/issues/
+.. _installation: getting-started/install.md
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: dcbench is a benchmark of data-centric tasks from across the machine learning lifecycle.
 
 
+   getting-started/install.md
+   getting-started/nutshell.md
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+    :maxdepth: 2
+    :caption: API Docs
+
+    apidocs/dcbench.rst
+
+
+..
+    Indices and tables
+    ==================
+
+    * :ref:`genindex`
+    * :ref:`modindex`
+    * :ref:`search`
+
