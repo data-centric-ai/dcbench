@@ -10,7 +10,6 @@ from typing import Any, List, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
 
-import google.cloud.storage as storage
 import meerkat as mk
 import pandas as pd
 import yaml
@@ -19,11 +18,11 @@ from tqdm import tqdm
 
 import dcbench.constants as constants
 
-# storage = LazyLoader("google.cloud.storage")
+storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
 
 
-def _upload_dir_to_gcs(local_path: str, gcs_path: str, bucket: storage.Bucket):
+def _upload_dir_to_gcs(local_path: str, gcs_path: str, bucket: "storage.Bucket"):
     assert os.path.isdir(local_path)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -83,7 +82,7 @@ class Artefact(ABC):
     def is_uploaded(self) -> bool:
         return _url_exists(self.remote_url)
 
-    def upload(self, force: bool = False, bucket: storage.Bucket = None):
+    def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
         if not os.path.exists(self.local_path):
             raise ValueError(
                 f"Could not find Artefact to upload at '{self.local_path}'. "
@@ -366,7 +365,7 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
     def is_uploaded(self) -> bool:
         return all(x.is_uploaded for x in self.artefacts.values())
 
-    def upload(self, force: bool = False, bucket: storage.Bucket = None):
+    def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
         if bucket is None:
             client = storage.Client()
             bucket = client.get_bucket(constants.BUCKET_NAME)
