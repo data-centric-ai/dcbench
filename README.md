@@ -1,6 +1,6 @@
 
 <div align="center">
-    <img src="docs/banner.png" height=150 alt="banner"/>
+    <img src="docs/assets/banner.png" height=150 alt="banner"/>
 
 -----
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/data-centric-ai/dcbench/CI)
