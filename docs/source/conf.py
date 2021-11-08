@@ -77,3 +77,6 @@ html_static_path = ["_static"]
 html_logo = "../assets/logo.png"
 
 html_theme_options = {}
+
+# Don't show module names in front of class names.
+add_module_names = False

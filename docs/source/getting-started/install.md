@@ -1,9 +1,8 @@
-Installation
+🚀 Install
 ============================
 
 This page describes how to install the dcbench Python package.
  
-
 ## Install with pip 
 ```bash
 pip install dcbench

@@ -4,11 +4,7 @@
 💡 What is dcbench?
 -------------------
 
-| This is a benchmark for evaluating all the steps in your machine
-  learning workflow beyond model training and tuning. This includes
-  tasks like label correction, slice discovery, and coreset selection.
-  We call these “data-centric” tasks and dcbench supports a growing list
-  of them:
+This is a benchmark for evaluating the steps in your machine learning workflow beyond model training and tuning. This includes tasks like label correction, slice discovery, and coreset selection. We call these “data-centric” tasks and dcbench supports a growing list of them:
 
 * Minimal data cleaning (``miniclean``) 
 * Label Correction (``labelfix``) 
@@ -28,11 +24,11 @@ connected, tasks. In dcbench all of these tasks are structured in a
 similar manner and they are supported by a common Python API that makes
 it easy to download data, run evaluations and submit solutions.
 
-⚙️ How are tasks structured in dcbench?
+⚙️ How it works?
 ---------------------------------------
 
 ``Problem``
------------
+~~~~~~~~~~~~
 Each task features a a collection of *problems*. *What is a problem?* A useful analogy is: chess problems are to a full chess game as *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label correction phase where labels are audited and fixed. Our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned.
 
 The benchmark supports a diverse set of problems that may look very different from one another. For example, a slice discovery problem has different inputs and outputs than a data cleaning problem. To deal with this, we group problems by *task.* In ``dcbench``, each task is represented by a subclass of :class:`dcbench.Problem` (*e.g.*
@@ -92,7 +88,7 @@ Note that :class:`Artefact` objects don't actually hold their underlying data in
 
 Finally,  we should point out that `problem` is a Python mapping, so we can index it directly to load artefacts.  
 
-```python
-# this is equivalent to problem.artefacts["dataset"].load()
-df: pd.DataFrame = problem["dataset"] 
-```
+.. code:: python
+
+   # this is equivalent to problem.artefacts["dataset"].load()
+   df: pd.DataFrame = problem["dataset"] 

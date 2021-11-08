@@ -8,4 +8,6 @@ from .tasks.miniclean import *
 from .tasks.slice import SliceDiscoveryProblem
 from .version import __version__
 
+__all__ = ["Problem", "SliceDiscoveryProblem", "Artefact"]
+
 tasks = Problem.__subclasses__()

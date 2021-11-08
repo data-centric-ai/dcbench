@@ -3,8 +3,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, List, Optional
 
-from dcbench.common.bundle import RelationalBundle
-
 from ..constants import PROBLEMS_DIR
 from .artefact import ArtefactContainer
 
@@ -20,7 +18,7 @@ class Problem(ArtefactContainer):
     container_dir = PROBLEMS_DIR
 
     @property
-    def solutions(self) -> RelationalBundle[Solution]:
+    def solutions(self):
         pass
 
     @abstractmethod
