@@ -4,7 +4,6 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def set_test_bucket(monkeypatch):
-    """Remove requests.sessions.Session.request for all tests."""
     test_bucket_name = "dcbench-test"
     monkeypatch.setattr("dcbench.constants.BUCKET_NAME", test_bucket_name)
     monkeypatch.setattr(
@@ -15,6 +14,4 @@ def set_test_bucket(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def set_test_local(monkeypatch, tmpdir):
-    """Remove requests.sessions.Session.request for all tests."""
-    # test_bucket_name = "dcbench-test"
-    # monkeypatch.setattr("dcbench.constants.LOCAL_DIR", tmpdir)
+    monkeypatch.setattr("dcbench.constants.LOCAL_DIR", tmpdir)

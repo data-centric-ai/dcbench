@@ -66,6 +66,7 @@ class Artefact(ABC):
 
     @property
     def local_path(self) -> str:
+        print(constants.LOCAL_DIR)
         return os.path.join(constants.LOCAL_DIR, self.path)
 
     @property
@@ -266,6 +267,7 @@ class ArtefactContainerClass(ABCMeta):
 
     def download_instances(self, include_artefacts: bool = False):
         os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
+        print(self.remote_instances_url)
         urlretrieve(self.remote_instances_url, self.local_instances_path)
 
         for container in self.instances:
