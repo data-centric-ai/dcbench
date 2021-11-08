@@ -17,7 +17,7 @@ A benchmark of data-centric tasks from across the machine learning lifecycle.
 | [**Docs**](https://dcbench.readthedocs.io/en/latest/index.html)
 | [**Contributing**](CONTRIBUTING.md)
 | [**Website**](https://www.datacentricai.cc/)
-| [**About**](✉️-About)
+| [**About**](#%EF%B8%8F-about)
 </div>
 
 
