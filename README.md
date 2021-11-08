@@ -77,7 +77,7 @@ dataframe
 We can get one of these problems with 
 
 ```python
-problem = SliceDiscoveryProblem.from_id("eda4")
+problem = SliceDiscoveryProblem.instances[0]
 ```
 
 ### `Artefact`
