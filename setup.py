@@ -43,7 +43,7 @@ REQUIRED = [
     # "torch>=1.8.0",
     "tqdm>=4.49.0",
     "scikit-learn",
-    "meerkat-ml[dev,vision] @ git+https://github.com/robustness-gym/meerkat@dev",
+    "meerkat-ml[dev,vision,ml] @ git+https://github.com/robustness-gym/meerkat@dev",
     # "torchvision>=0.9.0",
     # "wandb",
     # "ray[default]",
