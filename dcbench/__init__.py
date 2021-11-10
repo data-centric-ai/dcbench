@@ -4,10 +4,11 @@ of data preparation and handling in the context of AI workflows."""
 
 from .__main__ import main
 from .common import Artefact, Problem, Solution
+from .config import config
 from .tasks.miniclean import *
 from .tasks.slice import SliceDiscoveryProblem
 from .version import __version__
 
-__all__ = ["Problem", "SliceDiscoveryProblem", "Artefact"]
+__all__ = ["Problem", "SliceDiscoveryProblem", "Artefact", "config"]
 
 tasks = Problem.__subclasses__()

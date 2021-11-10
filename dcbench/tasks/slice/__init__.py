@@ -1,6 +1,6 @@
 from typing import Any
 
-from dcbench.common.artefact import DataPanelArtefact, MeerkatDatasetArtefact
+from dcbench.common.artefact import DataPanelArtefact, VisionDatasetArtefact
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Solution
 
@@ -13,7 +13,8 @@ class SliceDiscoveryProblem(Problem):
         "dataset": DataPanelArtefact,
         "predictions": DataPanelArtefact,
         "activations": DataPanelArtefact,
-        "base_dataset": MeerkatDatasetArtefact,
+        "base_dataset": VisionDatasetArtefact,
+        "slices": DataPanelArtefact,
     }
 
     task_id: str = "slice_discovery"

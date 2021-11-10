@@ -17,6 +17,7 @@ from meerkat.tools.lazy_loader import LazyLoader
 from tqdm import tqdm
 
 import dcbench.constants as constants
+from dcbench.config import config
 
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
@@ -66,13 +67,12 @@ class Artefact(ABC):
 
     @property
     def local_path(self) -> str:
-        print(constants.LOCAL_DIR)
-        return os.path.join(constants.LOCAL_DIR, self.path)
+        return os.path.join(config.local_dir, self.path)
 
     @property
     def remote_url(self) -> str:
         return os.path.join(
-            constants.PUBLIC_REMOTE_URL, self.path + ".tar.gz" if self.isdir else ""
+            config.public_remote_url, self.path + ".tar.gz" if self.isdir else ""
         )
 
     @property
@@ -94,7 +94,7 @@ class Artefact(ABC):
 
         if bucket is None:
             client = storage.Client()
-            bucket = client.get_bucket(constants.BUCKET_NAME)
+            bucket = client.get_bucket(config.public_bucket_name)
 
         if self.isdir:
             _upload_dir_to_gcs(
@@ -201,22 +201,31 @@ class DataPanelArtefact(Artefact):
         return data.write(self.local_path)
 
 
-class MeerkatDatasetArtefact(DataPanelArtefact):
+class VisionDatasetArtefact(DataPanelArtefact):
 
     DEFAULT_EXT: str = "mk"
     isdir: bool = True
 
+    COLUMN_SUBSETS = {"celeba": ["image", "identity", "image_id", "split"]}
+
     @classmethod
     def from_name(cls, name: str):
-        dp = mk.datasets.get(name)
         if name == "celeba":
-            dp = dp[["image", "identity", "image_id", "split"]]
+            dp = mk.datasets.get(name, dataset_dir=config.celeba_dir)
+            dp = dp[cls.COLUMN_SUBSETS[name]]
+        elif name == "imagenet":
+            dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir)
+        else:
+            raise ValueError(f"No dataset named '{name}' supported by dcbench.")
         artefact = cls.from_data(data=dp, artefact_id=name)
         return artefact
 
     def download(self, force: bool = False):
-        mk.datasets.get(self.id)
-        return super().download(force=force)
+        dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
+        if self.id in self.COLUMN_SUBSETS:
+            self.save(data=dp[self.COLUMN_SUBSETS[self.id]])
+        else:
+            self.save(data=dp)
 
 
 class ModelArtefact(Artefact):
@@ -241,11 +250,11 @@ class ArtefactContainerClass(ABCMeta):
 
     @property
     def local_instances_path(self):
-        return os.path.join(constants.LOCAL_DIR, self.instances_path)
+        return os.path.join(config.local_dir, self.instances_path)
 
     @property
     def remote_instances_url(self):
-        return os.path.join(constants.PUBLIC_REMOTE_URL, self.instances_path)
+        return os.path.join(config.public_remote_url, self.instances_path)
 
     def write_instances(self, containers: List[ArtefactContainer]):
         for container in containers:
@@ -257,7 +266,7 @@ class ArtefactContainerClass(ABCMeta):
 
     def upload_instances(self, include_artefacts: bool = False):
         client = storage.Client()
-        bucket = client.get_bucket(constants.BUCKET_NAME)
+        bucket = client.get_bucket(config.public_bucket_name)
         for container in tqdm(self.instances):
             assert isinstance(container, self)
             if include_artefacts:
@@ -267,7 +276,6 @@ class ArtefactContainerClass(ABCMeta):
 
     def download_instances(self, include_artefacts: bool = False):
         os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
-        print(self.remote_instances_url)
         urlretrieve(self.remote_instances_url, self.local_instances_path)
 
         for container in self.instances:
@@ -351,6 +359,9 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         self._attributes = value
 
     def __getitem__(self, key):
+        artefact = self.artefacts.__getitem__(key)
+        if not artefact.is_downloaded:
+            artefact.download()
         return self.artefacts.__getitem__(key).load()
 
     def __iter__(self):
@@ -370,7 +381,7 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
     def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
         if bucket is None:
             client = storage.Client()
-            bucket = client.get_bucket(constants.BUCKET_NAME)
+            bucket = client.get_bucket(config.public_bucket_name)
 
         for artefact in self.artefacts.values():
             artefact.upload(force=force, bucket=bucket)

@@ -6,14 +6,10 @@ from typing import Any, Iterator, List, Mapping, Optional
 
 from pandas import Series
 
+import dcbench.constants as constants
+from dcbench import config
+
 from ..common import Problem
-from ..constants import (
-    ARTEFACTS_DIR,
-    LOCAL_DIR,
-    METADATA_FILENAME,
-    RESULT_FILENAME,
-    SOLUTIONS_DIR,
-)
 from .artefact import ArtefactContainer
 from .download_utils import download_and_extract_archive
 
@@ -45,9 +41,6 @@ class Result(Mapping):
 
 
 class Solution(ArtefactContainer):
-
-    container_dir = SOLUTIONS_DIR
-
     def __init__(
         self,
         scenario: "Problem",
@@ -86,7 +79,9 @@ class Solution(ArtefactContainer):
 
     @property
     def location(self) -> str:
-        return os.path.join(LOCAL_DIR, SOLUTIONS_DIR, self.scenario.id, self.id)
+        return os.path.join(
+            config.local_dir, constants.SOLUTIONS_DIR, self.scenario.id, self.id
+        )
 
     def evaluate(self) -> "Solution":
         self.result = self.scenario.evaluate(self)
@@ -95,17 +90,19 @@ class Solution(ArtefactContainer):
     @staticmethod
     def list(scenario: "Problem") -> List[str]:
         # Determine location of solutions for a specific scenario.
-        basedir = os.path.join(LOCAL_DIR, SOLUTIONS_DIR, scenario.id)
+        basedir = os.path.join(config.local_dir, constants.SOLUTIONS_DIR, scenario.id)
         # All child directories correspond to solution ID.
         return [f.name for f in os.scandir(basedir) if f.is_dir()]
 
     @staticmethod
     def load(scenario: "Problem", id: str) -> "Solution":
         # Determine location of this solution.
-        basedir = os.path.join(LOCAL_DIR, SOLUTIONS_DIR, scenario.id, id)
+        basedir = os.path.join(
+            config.local_dir, constants.SOLUTIONS_DIR, scenario.id, id
+        )
 
         # Load metadata.
-        metadata_path = os.path.join(basedir, METADATA_FILENAME)
+        metadata_path = os.path.join(basedir, constants.METADATA_FILENAME)
         metadata = json.load(metadata_path) if os.path.exists(metadata_path) else dict()
         artefacts_url = metadata.get("artefacts_url", None)
         name = metadata.get("name", None)
@@ -113,14 +110,14 @@ class Solution(ArtefactContainer):
         code = metadata.get("code", None)
 
         if artefacts_url is not None:
-            artefacts_dir = os.path.join(basedir, ARTEFACTS_DIR)
+            artefacts_dir = os.path.join(basedir, constants.ARTEFACTS_DIR)
             os.makedirs(artefacts_dir, exist_ok=True)
             download_and_extract_archive(
                 artefacts_url, artefacts_dir, remove_finished=True
             )
 
         # Load result if present.
-        result_path = os.path.join(basedir, RESULT_FILENAME)
+        result_path = os.path.join(basedir, constants.RESULT_FILENAME)
         result = Result.load(result_path) if os.path.exists(result_path) else None
 
         return Solution(
@@ -135,7 +132,9 @@ class Solution(ArtefactContainer):
 
     def save(self) -> None:
         # Determine location of this solution.
-        basedir = os.path.join(LOCAL_DIR, SOLUTIONS_DIR, self.scenario.id, self.id)
+        basedir = os.path.join(
+            config.local_dir, constants.SOLUTIONS_DIR, self.scenario.id, self.id
+        )
         os.makedirs(basedir, exist_ok=True)
 
         # Save metadata.
@@ -148,14 +147,14 @@ class Solution(ArtefactContainer):
             metadata["paper"] = self.paper
         if self.code is not None:
             metadata["code"] = self.code
-        json.dump(metadata, os.path.join(basedir, METADATA_FILENAME))
+        json.dump(metadata, os.path.join(basedir, constants.METADATA_FILENAME))
 
         # Save artefacts.
-        os.makedirs(os.path.join(basedir, ARTEFACTS_DIR), exist_ok=True)
+        os.makedirs(os.path.join(basedir, constants.ARTEFACTS_DIR), exist_ok=True)
         for artefact in self.artefacts.values():
             artefact.save()
 
         # Save result.
         if self.result is not None:
-            result_path = os.path.join(basedir, RESULT_FILENAME)
+            result_path = os.path.join(basedir, constants.RESULT_FILENAME)
             self.result.save(result_path)

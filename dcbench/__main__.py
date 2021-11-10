@@ -5,8 +5,8 @@ from typing import Optional
 import click
 
 from dcbench.common import Solution
+from dcbench.config import config
 
-from .constants import LOCAL_DIR
 from .version import __version__
 
 __all__ = ("main",)
@@ -40,11 +40,6 @@ class MainGroup(click.Group):
     "--optional-artefacts-url",
     help="The URL pointing to the optional artefacts bundle.",
 )
-@click.option(
-    "--working-dir",
-    help="Set the working directory (default: %s)."
-    % os.path.join(os.getcwd(), LOCAL_DIR),
-)
 def main(
     hidden_artefacts_url: Optional[str] = None,
     working_dir: Optional[str] = None,
@@ -52,11 +47,7 @@ def main(
 ):
     """Collection of benchmarks that test various aspects of ML data
     preprocessing and management."""
-    global HIDDEN_ARTEFACTS_URL
-    HIDDEN_ARTEFACTS_URL = hidden_artefacts_url
-    global LOCAL_DIR
-    if working_dir is not None:
-        LOCAL_DIR = working_dir
+    pass
 
 
 @main.command(help="List all available scenarios.")

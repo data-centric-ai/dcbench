@@ -4,8 +4,8 @@ from .artefact import (
     Artefact,
     CSVArtefact,
     DataPanelArtefact,
-    MeerkatDatasetArtefact,
     ModelArtefact,
+    VisionDatasetArtefact,
 )
 from .problem import Problem
 from .result import Result

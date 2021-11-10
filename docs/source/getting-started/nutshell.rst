@@ -4,7 +4,7 @@
 💡 What is dcbench?
 -------------------
 
-This is a benchmark for evaluating the steps in your machine learning workflow beyond model training and tuning. This includes tasks like label correction, slice discovery, and coreset selection. We call these “data-centric” tasks and dcbench supports a growing list of them:
+This is a benchmark for evaluating the steps in your machine learning workflow beyond model training and tuning. This includes tasks like label correction, slice discovery, and coreset selection. We call these “data-centric” tasks and dcbench supports a growing number of them:
 
 * Minimal data cleaning (``miniclean``) 
 * Label Correction (``labelfix``) 
