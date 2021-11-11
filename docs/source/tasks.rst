@@ -17,21 +17,21 @@ Given a large training dataset, what is the smallest subset you can sample that 
 
 
 
-Problem Artefacts
+Problem Artifacts
 __________________
 ==============  ==================================  =============================================================================
 name            type                                description
 ==============  ==================================  =============================================================================
-``train_data``  :class:`dcbench.DataPanelArtefact`  A DataPanel of train examples with columns ``id``, ``input``, and ``target``.
-``test_data``   :class:`dcbench.DataPanelArtefact`  A DataPanel of test examples with columns ``id``, ``input``, and ``target``.
+``train_data``  :class:`dcbench.DataPanelArtifact`  A DataPanel of train examples with columns ``id``, ``input``, and ``target``.
+``test_data``   :class:`dcbench.DataPanelArtifact`  A DataPanel of test examples with columns ``id``, ``input``, and ``target``.
 ==============  ==================================  =============================================================================
 
-Solution Artefacts
+Solution Artifacts
 ____________________
 =============  =============================  ======================================================================
 name           type                           description
 =============  =============================  ======================================================================
-``train_ids``  :class:`dcbench.YAMLArtefact`  A list of train example ids from the  ``id`` column of ``train_data``.
+``train_ids``  :class:`dcbench.YAMLArtifact`  A list of train example ids from the  ``id`` column of ``train_data``.
 =============  =============================  ======================================================================
 
 TODO: Provide more details on how to run miniddata evaluation.  
@@ -52,23 +52,23 @@ Machine learnings models that achieve high overall accuracy often make  systemat
 
 
 
-Problem Artefacts
+Problem Artifacts
 __________________
 ================  ======================================  =======================================================================================
 name              type                                    description
 ================  ======================================  =======================================================================================
-``predictions``   :class:`dcbench.DataPanelArtefact`      A DataPanel of the model's predictions with columns `id`,`target`, and `probs.`
-``slices``        :class:`dcbench.DataPanelArtefact`      A DataPanel of the ground truth slice labels with columns  `id`, `target`, and `probs.`
-``activations``   :class:`dcbench.DataPanelArtefact`      A DataPanel of the model's activations with columns `id`,`act`
-``base_dataset``  :class:`dcbench.VisionDatasetArtefact`  A DataPanel representing the base dataset with columns `id` and `image`.
+``predictions``   :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's predictions with columns `id`,`target`, and `probs.`
+``slices``        :class:`dcbench.DataPanelArtifact`      A DataPanel of the ground truth slice labels with columns  `id`, `target`, and `probs.`
+``activations``   :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's activations with columns `id`,`act`
+``base_dataset``  :class:`dcbench.VisionDatasetArtifact`  A DataPanel representing the base dataset with columns `id` and `image`.
 ================  ======================================  =======================================================================================
 
-Solution Artefacts
+Solution Artifacts
 ____________________
 ===============  ==================================  ==========================================================================
 name             type                                description
 ===============  ==================================  ==========================================================================
-``pred_slices``  :class:`dcbench.DataPanelArtefact`  A DataPanel of predicted slice labels with columns `id` and `pred_slices`.
+``pred_slices``  :class:`dcbench.DataPanelArtifact`  A DataPanel of predicted slice labels with columns `id` and `pred_slices`.
 ===============  ==================================  ==========================================================================
 
 TODO: Provide more details on how to run slice discovery evaluation. 
@@ -89,29 +89,29 @@ When it comes to data preparation, data cleaning is often an essential yet quite
 
 
 
-Problem Artefacts
+Problem Artifacts
 __________________
 ===================  ============================  =============
 name                 type                          description
 ===================  ============================  =============
-``X_train_dirty_a``  :class:`dcbench.CSVArtefact`
-``X_train_dirty_b``  :class:`dcbench.CSVArtefact`
-``X_train_clean_a``  :class:`dcbench.CSVArtefact`
-``X_train_clean_b``  :class:`dcbench.CSVArtefact`
-``y_train_a``        :class:`dcbench.CSVArtefact`
-``y_train_b``        :class:`dcbench.CSVArtefact`
-``X_val``            :class:`dcbench.CSVArtefact`
-``y_val``            :class:`dcbench.CSVArtefact`
-``X_test``           :class:`dcbench.CSVArtefact`
-``y_test``           :class:`dcbench.CSVArtefact`
+``X_train_dirty_a``  :class:`dcbench.CSVArtifact`
+``X_train_dirty_b``  :class:`dcbench.CSVArtifact`
+``X_train_clean_a``  :class:`dcbench.CSVArtifact`
+``X_train_clean_b``  :class:`dcbench.CSVArtifact`
+``y_train_a``        :class:`dcbench.CSVArtifact`
+``y_train_b``        :class:`dcbench.CSVArtifact`
+``X_val``            :class:`dcbench.CSVArtifact`
+``y_val``            :class:`dcbench.CSVArtifact`
+``X_test``           :class:`dcbench.CSVArtifact`
+``y_test``           :class:`dcbench.CSVArtifact`
 ===================  ============================  =============
 
-Solution Artefacts
+Solution Artifacts
 ____________________
 =============  ============================  =============
 name           type                          description
 =============  ============================  =============
-``train_ids``  :class:`dcbench.CSVArtefact`
+``train_ids``  :class:`dcbench.CSVArtifact`
 =============  ============================  =============
 
 TODO: Provide more details on how to run miniclean evaluation. 

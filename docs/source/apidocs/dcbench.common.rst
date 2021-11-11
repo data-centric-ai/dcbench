@@ -4,10 +4,10 @@ dcbench.common package
 Submodules
 ----------
 
-dcbench.common.artefact module
+dcbench.common.artifact module
 ------------------------------
 
-.. automodule:: dcbench.common.artefact
+.. automodule:: dcbench.common.artifact
    :members:
    :undoc-members:
    :show-inheritance:

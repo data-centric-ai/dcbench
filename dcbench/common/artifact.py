@@ -437,7 +437,7 @@ class ArtifactContainer(ABC, Mapping, metaclass=ArtifactContainerClass):
                 artifact_id=os.path.join(
                     self.task_id,
                     self.container_type,
-                    constants.ARTEFACTS_DIR,
+                    constants.ARTIFACTS_DIR,
                     self.container_id,
                     name,
                 ),
