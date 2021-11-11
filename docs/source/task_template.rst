@@ -14,12 +14,12 @@
 
 
 
-Problem Artefacts
+Problem Artifacts
 __________________
-{problem_artefact_table}
+{problem_artifact_table}
 
-Solution Artefacts
+Solution Artifacts
 ____________________
-{solution_artefact_table}
+{solution_artifact_table}
 
 {longer_description}

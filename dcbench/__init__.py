@@ -3,12 +3,12 @@ of data preparation and handling in the context of AI workflows."""
 # flake8: noqa
 
 from .__main__ import main
-from .common import Artefact, Problem, Solution
-from .common.artefact import (
-    CSVArtefact,
-    DataPanelArtefact,
-    VisionDatasetArtefact,
-    YAMLArtefact,
+from .common import Artifact, Problem, Solution
+from .common.artifact import (
+    CSVArtifact,
+    DataPanelArtifact,
+    VisionDatasetArtifact,
+    YAMLArtifact,
 )
 from .config import config
 from .tasks.miniclean.problem import MinicleanProblem, MiniCleanSolution
@@ -24,11 +24,11 @@ __all__ = [
     "MiniDataSolution",
     "MinicleanProblem",
     "MiniCleanSolution",
-    "Artefact",
-    "YAMLArtefact",
-    "DataPanelArtefact",
-    "VisionDatasetArtefact",
-    "CSVArtefact",
+    "Artifact",
+    "YAMLArtifact",
+    "DataPanelArtifact",
+    "VisionDatasetArtifact",
+    "CSVArtifact",
     "config",
 ]
 

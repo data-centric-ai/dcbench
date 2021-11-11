@@ -1,9 +1,9 @@
 from typing import Mapping
 
-from dcbench.common.artefact import (
-    ArtefactSpec,
-    DataPanelArtefact,
-    VisionDatasetArtefact,
+from dcbench.common.artifact import (
+    ArtifactSpec,
+    DataPanelArtifact,
+    VisionDatasetArtifact,
 )
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Solution
@@ -11,9 +11,9 @@ from dcbench.common.solution import Solution
 
 class SliceDiscoverySolution(Solution):
 
-    artefact_specs: Mapping[str, ArtefactSpec] = {
-        "pred_slices": ArtefactSpec(
-            artefact_type=DataPanelArtefact,
+    artifact_specs: Mapping[str, ArtifactSpec] = {
+        "pred_slices": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
             description="A DataPanel of predicted slice labels with columns `id`"
             " and `pred_slices`.",
         ),
@@ -33,26 +33,26 @@ class SliceDiscoveryProblem(Problem):
         " unstructured data for underperforming slices."
     )
 
-    artefact_specs: Mapping[str, ArtefactSpec] = {
-        "predictions": ArtefactSpec(
-            artefact_type=DataPanelArtefact,
+    artifact_specs: Mapping[str, ArtifactSpec] = {
+        "predictions": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
             description=(
                 "A DataPanel of the model's predictions with columns `id`,"
                 "`target`, and `probs.`"
             ),
         ),
-        "slices": ArtefactSpec(
-            artefact_type=DataPanelArtefact,
+        "slices": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
             description="A DataPanel of the ground truth slice labels with columns "
             " `id`, `target`, and `probs.`",
         ),
-        "activations": ArtefactSpec(
-            artefact_type=DataPanelArtefact,
+        "activations": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
             description="A DataPanel of the model's activations with columns `id`,"
             "`act`",
         ),
-        "base_dataset": ArtefactSpec(
-            artefact_type=VisionDatasetArtefact,
+        "base_dataset": ArtifactSpec(
+            artifact_type=VisionDatasetArtifact,
             description="A DataPanel representing the base dataset with columns `id` "
             "and `image`.",
         ),

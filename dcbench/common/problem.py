@@ -4,13 +4,13 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING
 
 from ..constants import PROBLEMS_DIR
-from .artefact import ArtefactContainer
+from .artifact import ArtifactContainer
 
 if TYPE_CHECKING:
     from .solution import Solution
 
 
-class Problem(ArtefactContainer):
+class Problem(ArtifactContainer):
     container_type: str = "problem"
     task_id: str
 

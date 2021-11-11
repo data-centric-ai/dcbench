@@ -1,6 +1,6 @@
 from typing import Any, Mapping, Sequence
 
-from dcbench.common.artefact import ArtefactSpec, DataPanelArtefact, YAMLArtefact
+from dcbench.common.artifact import ArtifactSpec, DataPanelArtifact, YAMLArtifact
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Solution
 
@@ -8,9 +8,9 @@ from dcbench.common.solution import Solution
 class MiniDataSolution(Solution):
 
     # flake8: noqa
-    artefact_specs: Mapping[str, ArtefactSpec] = {
-        "train_ids": ArtefactSpec(
-            artefact_type=YAMLArtefact,
+    artifact_specs: Mapping[str, ArtifactSpec] = {
+        "train_ids": ArtifactSpec(
+            artifact_type=YAMLArtifact,
             description=(
                 "A list of train example ids from the "
                 " ``id`` column of ``train_data``."
@@ -21,7 +21,7 @@ class MiniDataSolution(Solution):
 
     @classmethod
     def from_ids(cls, train_ids: Sequence[str], problem_id: str):
-        cls.from_artefacts(
+        cls.from_artifacts(
             {"train_ids": train_ids}, attributes={"problem_id": problem_id}
         )
 
@@ -32,14 +32,14 @@ class MiniDataProblem(Problem):
     # flake8: noqa
     summary = "Given a large training dataset, what is the smallest subset you can sample that still achieves some threshold of performance."
 
-    artefact_specs: Mapping[str, ArtefactSpec] = {
-        "train_data": ArtefactSpec(
-            artefact_type=DataPanelArtefact,
+    artifact_specs: Mapping[str, ArtifactSpec] = {
+        "train_data": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
             description="A DataPanel of train examples with columns ``id``, "
             "``input``, and ``target``.",
         ),
-        "test_data": ArtefactSpec(
-            artefact_type=DataPanelArtefact,
+        "test_data": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
             description="A DataPanel of test examples with columns ``id``, "
             "``input``, and ``target``.",
         ),

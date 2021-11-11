@@ -3,7 +3,7 @@ from typing import Iterator, Mapping
 
 from pandas import Series
 
-from .artefact import ArtefactContainer
+from .artifact import ArtifactContainer
 
 
 class Result(Mapping):
@@ -32,5 +32,5 @@ class Result(Mapping):
         return Series(self).__repr__()
 
 
-class Solution(ArtefactContainer):
+class Solution(ArtifactContainer):
     container_type: str = "solution"
