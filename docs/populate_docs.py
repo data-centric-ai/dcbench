@@ -42,7 +42,7 @@ for task in dcbench.tasks:
         full_name=task.full_name,
         summary=task.summary,
         num_problems=len(task.instances),
-        task_id=f"``{task.task_id}``",
+        task_id=task.task_id,
         problem_class=get_rst_class_ref(task),
         problem_artifact_table=get_artifact_table(task),
         solution_class=get_rst_class_ref(task.solution_class),

@@ -1,8 +1,11 @@
 🎯 Tasks
 =========
 
+.. _minidata:
+
 Minimal Data Selection
 --------------------------------------------
+
 .. sidebar::
     Task Details
     
@@ -17,6 +20,8 @@ Given a large training dataset, what is the smallest subset you can sample that 
 
     We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <https://console.cloud.google.com/storage/browser/dcbench/minidata>`_. 
 
+
+:ref:`minidata`
 
 Problem Artifacts
 __________________
@@ -38,8 +43,11 @@ name           type                           description
 TODO: Provide more details on how to run miniddata evaluation.  
 
 
+.. _slice_discovery:
+
 Slice Discovery
 --------------------------------------------
+
 .. sidebar::
     Task Details
     
@@ -54,6 +62,8 @@ Machine learnings models that achieve high overall accuracy often make  systemat
 
     We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <https://console.cloud.google.com/storage/browser/dcbench/slice_discovery>`_. 
 
+
+:ref:`minidata`
 
 Problem Artifacts
 __________________
@@ -78,8 +88,11 @@ name             type                                description
 TODO: Provide more details on how to run slice discovery evaluation. 
 
 
+.. _miniclean:
+
 Minimal Feature Cleaning
 --------------------------------------------
+
 .. sidebar::
     Task Details
     
@@ -94,6 +107,8 @@ When it comes to data preparation, data cleaning is often an essential yet quite
 
     We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <https://console.cloud.google.com/storage/browser/dcbench/miniclean>`_. 
 
+
+:ref:`minidata`
 
 Problem Artifacts
 __________________

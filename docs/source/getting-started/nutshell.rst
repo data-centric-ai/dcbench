@@ -4,15 +4,14 @@
 💡 What is dcbench?
 -------------------
 
-This is a benchmark for evaluating the steps in your machine learning workflow beyond model training and tuning. This includes tasks like label correction, slice discovery, and coreset selection. We call these “data-centric” tasks and dcbench supports a growing number of them:
+This benchmark evaluates the steps in your machine learning workflow beyond model training and tuning. This includes tasks like feature cleaning, slice discovery, and coreset selection. We call these “data-centric” tasks because they're focused on exploring and manipulating data – not training models. `dcbench` supports a growing number of them:
 
-* Minimal data cleaning (``miniclean``) 
-* Label Correction (``labelfix``) 
-* Slice Discovery (``slice-discovery``) 
-* Minimal training dataset selection (``minitrain``)
+* :any:`minidata`: Find the smallest subset of training data on which a fixed model architecture achieves accuracy above a threshold. 
+* :any:`slice_discovery`: Identify subgroups on which a model underperforms.
+* :any:`miniclean`: Given a fixed budget, clean input features of training data to improve model performance.  
 
-Unlike machine learning benchmarks focused on model training, dcbench
-includes tasks that look very different from one another: the inputs and
+
+dcbench includes tasks that look very different from one another: the inputs and
 outputs of the slice discovery task are not the same as those of the
 minimal data cleaning task. However, we think it important that
 researchers and practitioners be able to run evaluations on data-centric
@@ -20,7 +19,7 @@ tasks across the ML lifecycle without having to learn a bunch of
 different APIs or rewrite evaluation scripts.
 
 So, dcbench is designed to be a common home for these diverse, but
-connected, tasks. In dcbench all of these tasks are structured in a
+related, tasks. In dcbench all of these tasks are structured in a
 similar manner and they are supported by a common Python API that makes
 it easy to download data, run evaluations and submit solutions.
 
@@ -29,7 +28,7 @@ it easy to download data, run evaluations and submit solutions.
 
 ``Problem``
 ~~~~~~~~~~~~
-Each task features a a collection of *problems*. *What is a problem?* A useful analogy is: chess problems are to a full chess game as *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label correction phase where labels are audited and fixed. Our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned.
+Each task features a collection of problems. *What is a problem?* A problem is a simply single instance of a data-centric task . For example, the Minimal Feature Cleaning task includes problems for 4 different datasets    many machine-learning workflows include a data cleaning phase where input features are audited and fixed. A potentially useful analogy is: chess problems are to a full chess game as *problems* are to the full data-centric ML lifecycle. 
 
 The benchmark supports a diverse set of problems that may look very different from one another. For example, a slice discovery problem has different inputs and outputs than a data cleaning problem. To deal with this, we group problems by *task.* In ``dcbench``, each task is represented by a subclass of :class:`dcbench.Problem` (*e.g.*
 :class:`dcbench.SliceDiscoveryProblem`, :class:`dcbench.MinicleanProblem`). The problems
@@ -51,7 +50,7 @@ with:
 .. code:: python
 
    from dcbench import SliceDiscoveryProblem
-   SliceDiscoveryProblem.instances
+   SliceDiscoveryProblem.describe_instances()
 
    # Out: TODO, get the actual dataframe output here 
    dataframe
@@ -60,7 +59,7 @@ We can get one of these problems with
 
 .. code:: python
 
-   problem = SliceDiscoveryProblem.from_id("eda4")
+   problem = SliceDiscoveryProblem.instances[0]
 
 ``Artifact``
 ~~~~~~~~~~~~

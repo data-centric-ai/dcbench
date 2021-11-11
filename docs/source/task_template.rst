@@ -1,9 +1,12 @@
+.. _{task_id}:
+
 {full_name}
 --------------------------------------------
+
 .. sidebar::
     Task Details
     
-    :Task ID:      {task_id}
+    :Task ID:      ``{task_id}``
     :Problems:     {num_problems}
 
 {summary}
@@ -14,6 +17,8 @@
 
     We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <{storage_url}>`_. 
 
+
+:ref:`minidata`
 
 Problem Artifacts
 __________________
