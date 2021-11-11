@@ -1,17 +1,9 @@
 import json
-import os
-import random
-import string
-from typing import Any, Iterator, List, Mapping, Optional
+from typing import Iterator, Mapping
 
 from pandas import Series
 
-import dcbench.constants as constants
-from dcbench import config
-
-from ..common import Problem
 from .artefact import ArtefactContainer
-from .download_utils import download_and_extract_archive
 
 
 class Result(Mapping):
