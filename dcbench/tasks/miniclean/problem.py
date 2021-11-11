@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Any, Mapping
 
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 
-from dcbench.common.artefact import CSVArtefact
+from dcbench.common.artefact import ArtefactSpec, CSVArtefact
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Result, Solution
 
@@ -12,19 +12,24 @@ from .common import Preprocessor
 
 class MinicleanProblem(Problem):
 
-    # scenario_df = .download()
+    summary = (
+        "When it comes to data preparation, data cleaning is often an essential yet "
+        "quite costly task. If we are given a fixed cleaning budget, the challenge is "
+        "to find the training data examples that would would bring the biggest "
+        "positive impact on model performance if we were to clean them."
+    )
 
-    artefact_spec = {
-        "X_train_dirty_a": CSVArtefact,
-        "X_train_dirty_b": CSVArtefact,
-        "X_train_clean_a": CSVArtefact,
-        "X_train_clean_b": CSVArtefact,
-        "y_train_a": CSVArtefact,
-        "y_train_b": CSVArtefact,
-        "X_val": CSVArtefact,
-        "y_val": CSVArtefact,
-        "X_test": CSVArtefact,
-        "y_test": CSVArtefact,
+    artefact_specs: Mapping[str, ArtefactSpec] = {
+        "X_train_dirty_a": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "X_train_dirty_b": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "X_train_clean_a": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "X_train_clean_b": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "y_train_a": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "y_train_b": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "X_val": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "y_val": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "X_test": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+        "y_test": ArtefactSpec(artefact_type=CSVArtefact, description=""),
     }
 
     task_id: str = "miniclean"

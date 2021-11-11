@@ -63,6 +63,7 @@ EXTRAS = {
         "parameterized",
         "pre-commit>=2.9.3",
         "sphinx-autobuild",
+        "google-cloud-storage",
     ],
 }
 

@@ -6,6 +6,7 @@ import tempfile
 import uuid
 from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, List, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
@@ -72,7 +73,7 @@ class Artefact(ABC):
     @property
     def remote_url(self) -> str:
         return os.path.join(
-            config.public_remote_url, self.path + ".tar.gz" if self.isdir else ""
+            config.public_remote_url, self.path + (".tar.gz" if self.isdir else "")
         )
 
     @property
@@ -304,6 +305,14 @@ class ArtefactContainerClass(ABCMeta):
             from ..tasks.slice import SliceDiscoveryProblem
 
             return SliceDiscoveryProblem
+        elif data == "miniclean":
+            from ..tasks.miniclean import MinicleanProblem
+
+            return MinicleanProblem
+        elif data == "minidata":
+            from ..tasks.minidata import MiniDataProblem
+
+            return MiniDataProblem
         else:
             raise ValueError
 
@@ -318,10 +327,15 @@ yaml.add_multi_representer(ArtefactContainerClass, ArtefactContainerClass.to_yam
 yaml.add_constructor("!ArtefactContainerClass", ArtefactContainerClass.from_yaml)
 
 
+@dataclass
+class ArtefactSpec:
+    description: str
+    artefact_type: type
+
+
 class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
 
-    artefact_spec: Mapping[str, type]
-    container_dir: str
+    artefact_specs: Mapping[str, ArtefactSpec]
     task_id: str = "none"
 
     def __init__(
@@ -332,7 +346,7 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
     ):
         self.container_id = container_id
         artefacts = self._create_artefacts(artefacts=artefacts)
-        self._check_artefact_spec(artefacts=artefacts)
+        self._check_artefact_specs(artefacts=artefacts)
         self.artefacts = artefacts
         if attributes is None:
             attributes = {}
@@ -343,8 +357,10 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         cls,
         artefacts: Mapping[str, Artefact],
         attributes: Mapping[str, BASIC_TYPE] = None,
+        container_id: str = None,
     ):
-        container_id = uuid.uuid4().hex
+        if container_id is None:
+            container_id = uuid.uuid4().hex
         container = cls(
             container_id=container_id, artefacts=artefacts, attributes=attributes
         )
@@ -395,26 +411,27 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
             name: artefact
             if isinstance(artefact, Artefact)
             else Artefact.from_data(
-                data=artefact, artefact_id=os.path.join(self.container_id, name)
+                data=artefact,
+                artefact_id=os.path.join(self.task_id, self.container_id, name),
             )
             for name, artefact in artefacts.items()
         }
 
     @classmethod
-    def _check_artefact_spec(cls, artefacts: Mapping[str, Artefact]):
+    def _check_artefact_specs(cls, artefacts: Mapping[str, Artefact]):
         for name, artefact in artefacts.items():
-            if name not in cls.artefact_spec:
+            if name not in cls.artefact_specs:
                 raise ValueError(
                     f"Passed artefact name '{name}', but the specification for"
                     f" {cls.__name__} doesn't include it."
                 )
 
-            if not isinstance(artefact, cls.artefact_spec[name]):
+            if not isinstance(artefact, cls.artefact_specs[name].artefact_type):
                 raise ValueError(
                     f"Passed an artefact of type {type(artefact)} to {cls.__name__}"
                     f" for the artefact named '{name}'. The specification for"
                     f" {cls.__name__} expects an Artefact of type"
-                    f" {cls.artefact_spec[name]}."
+                    f" {cls.artefact_spec[name].artefact_type}."
                 )
 
     @staticmethod

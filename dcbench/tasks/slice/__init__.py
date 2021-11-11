@@ -1,36 +1,45 @@
-from typing import Any
+from typing import Any, Mapping
 
-from dcbench.common.artefact import DataPanelArtefact, VisionDatasetArtefact
+from dcbench.common.artefact import (
+    ArtefactSpec,
+    DataPanelArtefact,
+    VisionDatasetArtefact,
+)
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Solution
 
 
 class SliceDiscoveryProblem(Problem):
 
-    # scenario_df = .download()
+    summary = (
+        "Machine learnings models that achieve high overall accuracy often make "
+        " systematic erors on important subgroups (or *slices*) of data. When working  "
+        " with high-dimensional inputs (*e.g.* images, audio) where data slices are  "
+        " often unlabeled, identifying underperforming slices is a challenging. In "
+        " this task, we'll develop automated slice discovery methods that mine "
+        " unstructured data for underperforming slices."
+    )
 
-    artefact_spec = {
-        "dataset": DataPanelArtefact,
-        "predictions": DataPanelArtefact,
-        "activations": DataPanelArtefact,
-        "base_dataset": VisionDatasetArtefact,
-        "slices": DataPanelArtefact,
+    artefact_specs: Mapping[str, ArtefactSpec] = {
+        "predictions": ArtefactSpec(
+            artefact_type=DataPanelArtefact,
+            description=(
+                "A Datapanel of the model's predictions with columns `id`,"
+                "`target`, and `probs.`"
+            ),
+        ),
+        "slices": ArtefactSpec(
+            artefact_type=DataPanelArtefact,
+            description="""
+                A datapanel containing ground truth slice labels """,
+        ),
+        "activations": ArtefactSpec(artefact_type=DataPanelArtefact, description=""),
+        "base_dataset": ArtefactSpec(
+            artefact_type=VisionDatasetArtefact, description="A base dataset"
+        ),
     }
 
     task_id: str = "slice_discovery"
-
-    # def __init__(self):
-    #     self.properties = {
-    #         "dataset": "celeba",
-    #         "slice_type": "spurious_correlation",
-    #         "task": "classification",
-    #         "target": "vehicles",
-    #     }
-
-    @classmethod
-    def list(cls):
-        for scenario_id in cls.scenario_df["id"]:
-            yield cls.from_id(scenario_id)
 
     @classmethod
     def from_id(cls, scenario_id: str):
@@ -41,74 +50,3 @@ class SliceDiscoveryProblem(Problem):
 
     def evaluate(self, solution: Solution):
         pass
-
-
-# Task -> Scenario
-
-
-# class MiniDatasetProblem(Problem):
-#     artefact_spec = {
-#         "data_dp": DataPanelArtefact,
-#         "model": ModelArtefact
-#     }
-
-
-# scenario = MiniDatasetScenario.from_artefacts(...)
-# scenario.solve()
-# scenario.evaluate()
-
-# class SliceDiscoveryTask(Task):
-
-# solution.upload()
-
-# SolutionSet.upload()
-# ProblemSet should only include one Problem
-# ProblemSet(dataset=).download()
-# submission: Submission = ProblemSet.solve()
-# problem_instance = SliceDiscoveryProblem()
-
-# solution: SliceDiscoverySolution = problem_instance.solve()
-
-
-# class Submission():
-
-# class Solution(ArtefactContainer):
-#     problem_spec: Mapping[str, type]
-
-# class Problem(ArtefactContainer):
-#     problem_spec: Mapping[str, type]
-
-#     artefact_spec: Mapping[str, type]
-
-
-# class SliceDiscoveryProblem(Problem):
-
-#     scenario_df = CsvArtefact(name="slice_discovery_scenarios").download()
-
-#     artefact_spec = {
-#         "data_dp": DataPanelArtefact,
-#         "model": ModelArtefact
-#     }
-
-#     def __init__(self):
-#         self.properties = {
-#             "dataset": "celeba",
-#             "slice_type": "spurious_correlation",
-#             "task": "classification",
-#             "target": "vehicles"
-#         }
-
-#     .groupby()
-
-#     @classmethod
-#     def list(cls):
-#         for scenario_id in cls.scenario_df["id"]:
-#             yield cls.from_id(scenario_id)
-
-#     @classmethod
-#     def from_id(cls, scenario_id: str):
-#         pass
-
-#     @classmethod
-#     def from_artefacts(cls, data_dp: mk.DataPanel, model: nn.Module):
-#         pass

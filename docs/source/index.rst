@@ -16,6 +16,7 @@ Welcome to dcbench
 
    getting-started/install.md
    getting-started/nutshell.md
+   tasks.rst
 
 
 .. toctree::
