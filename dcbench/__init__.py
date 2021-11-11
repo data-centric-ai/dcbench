@@ -4,7 +4,12 @@ of data preparation and handling in the context of AI workflows."""
 
 from .__main__ import main
 from .common import Artefact, Problem, Solution
-from .common.artefact import CSVArtefact, DataPanelArtefact, VisionDatasetArtefact
+from .common.artefact import (
+    CSVArtefact,
+    DataPanelArtefact,
+    VisionDatasetArtefact,
+    YAMLArtefact,
+)
 from .config import config
 from .tasks.miniclean import MinicleanProblem
 from .tasks.minidata import MiniDataProblem
@@ -17,10 +22,11 @@ __all__ = [
     "MiniDataProblem",
     "MinicleanProblem",
     "Artefact",
+    "YAMLArtefact",
     "DataPanelArtefact",
     "VisionDatasetArtefact",
     "CSVArtefact",
     "config",
 ]
 
-tasks = Problem.__subclasses__()
+tasks = [MiniDataProblem, SliceDiscoveryProblem, MinicleanProblem]

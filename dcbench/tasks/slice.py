@@ -9,8 +9,21 @@ from dcbench.common.problem import Problem
 from dcbench.common.solution import Solution
 
 
-class SliceDiscoveryProblem(Problem):
+class SliceDiscoverySolution(Solution):
 
+    artefact_specs: Mapping[str, ArtefactSpec] = {
+        "pred_slices": ArtefactSpec(
+            artefact_type=DataPanelArtefact,
+            description="A DataPanel of predicted slice labels with columns `id`"
+            " and `pred_slices`.",
+        ),
+    }
+
+    task_id: str = "slice_discovery"
+
+
+class SliceDiscoveryProblem(Problem):
+    full_name = "Slice Discovery"
     summary = (
         "Machine learnings models that achieve high overall accuracy often make "
         " systematic erors on important subgroups (or *slices*) of data. When working  "
@@ -41,11 +54,10 @@ class SliceDiscoveryProblem(Problem):
 
     task_id: str = "slice_discovery"
 
+    solution_class = SliceDiscoverySolution
+
     @classmethod
     def from_id(cls, scenario_id: str):
-        pass
-
-    def solve(self, **kwargs: Any) -> Solution:
         pass
 
     def evaluate(self, solution: Solution):

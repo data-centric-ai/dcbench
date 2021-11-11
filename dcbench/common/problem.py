@@ -11,19 +11,12 @@ if TYPE_CHECKING:
 
 
 class Problem(ArtefactContainer):
-    container_id = "problem"
+    container_type: str = "problem"
     task_id: str
-    result_metrics: Optional[List[str]] = None
 
     container_dir = PROBLEMS_DIR
 
-    @property
-    def solutions(self):
-        pass
-
-    @abstractmethod
-    def solve(self, **kwargs: Any) -> Solution:
-        raise NotImplementedError
+    solution_class: type
 
     @abstractmethod
     def evaluate(self, solution: Solution):

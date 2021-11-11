@@ -12,6 +12,10 @@ from .common import Preprocessor
 
 class MinicleanProblem(Problem):
 
+    # TODO: consider changing this name, word minimal doesn't feel appropriate since
+    # the budget is fixed
+    fullname = "Minimal Feature Cleaning"
+
     summary = (
         "When it comes to data preparation, data cleaning is often an essential yet "
         "quite costly task. If we are given a fixed cleaning budget, the challenge is "
@@ -33,14 +37,6 @@ class MinicleanProblem(Problem):
     }
 
     task_id: str = "miniclean"
-
-    # def __init__(self):
-    #     self.properties = {
-    #         "dataset": "celeba",
-    #         "slice_type": "spurious_correlation",
-    #         "task": "classification",
-    #         "target": "vehicles",
-    #     }
 
     @classmethod
     def list(cls):
@@ -142,4 +138,4 @@ class MinicleanProblem(Problem):
             and a.y_test is not None
         ):
             result["acc_b_test"] = model_b.score(X_test, y_test)
-        return Result(result)
+        return result

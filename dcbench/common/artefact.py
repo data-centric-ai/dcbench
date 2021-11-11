@@ -59,9 +59,7 @@ class Artefact(ABC):
     isdir: bool = False
 
     def __init__(self, artefact_id: str, **kwargs) -> None:
-        self.path = os.path.join(
-            constants.ARTEFACTS_DIR, f"{artefact_id}.{self.DEFAULT_EXT}"
-        )
+        self.path = f"{artefact_id}.{self.DEFAULT_EXT}"
         self.id = artefact_id
         os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
         super().__init__()
@@ -189,6 +187,18 @@ class CSVArtefact(Artefact):
         return data.to_csv(self.local_path)
 
 
+class YAMLArtefact(Artefact):
+
+    DEFAULT_EXT: str = "yaml"
+
+    def load(self) -> pd.DataFrame:
+        self._ensure_downloaded()
+        return yaml.load(open(self.local_path), yaml=yaml.FullLoader)
+
+    def save(self, data: any) -> None:
+        return yaml.dump(data, open(self.local_path))
+
+
 class DataPanelArtefact(Artefact):
 
     DEFAULT_EXT: str = "mk"
@@ -247,7 +257,7 @@ BASIC_TYPE = Union[int, float, str, bool]
 class ArtefactContainerClass(ABCMeta):
     @property
     def instances_path(self):
-        return os.path.join(self.task_id, self.container_id, "instances.yaml")
+        return os.path.join(self.task_id, self.container_type, "instances.yaml")
 
     @property
     def local_instances_path(self):
@@ -412,7 +422,13 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
             if isinstance(artefact, Artefact)
             else Artefact.from_data(
                 data=artefact,
-                artefact_id=os.path.join(self.task_id, self.container_id, name),
+                artefact_id=os.path.join(
+                    self.task_id,
+                    self.container_type,
+                    constants.ARTEFACTS_DIR,
+                    self.container_id,
+                    name,
+                ),
             )
             for name, artefact in artefacts.items()
         }
