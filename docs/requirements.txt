@@ -3,3 +3,4 @@ sphinx_autodoc_typehints
 nbsphinx
 recommonmark
 toml
+furo
