@@ -10,11 +10,17 @@ from dcbench.common.solution import Result, Solution
 from .common import Preprocessor
 
 
+class MiniCleanSolution(Solution):
+    artefact_specs: Mapping[str, ArtefactSpec] = {
+        "train_ids": ArtefactSpec(artefact_type=CSVArtefact, description="")
+    }
+
+
 class MinicleanProblem(Problem):
 
     # TODO: consider changing this name, word minimal doesn't feel appropriate since
     # the budget is fixed
-    fullname = "Minimal Feature Cleaning"
+    full_name = "Minimal Feature Cleaning"
 
     summary = (
         "When it comes to data preparation, data cleaning is often an essential yet "
@@ -37,6 +43,8 @@ class MinicleanProblem(Problem):
     }
 
     task_id: str = "miniclean"
+
+    solution_class: type = MiniCleanSolution
 
     @classmethod
     def list(cls):

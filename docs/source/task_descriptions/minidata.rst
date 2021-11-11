@@ -1,1 +1,1 @@
-minidata 
+TODO: Provide more details on how to run miniddata evaluation.  

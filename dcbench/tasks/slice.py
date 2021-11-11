@@ -1,4 +1,4 @@
-from typing import Any, Mapping
+from typing import Mapping
 
 from dcbench.common.artefact import (
     ArtefactSpec,
@@ -37,18 +37,24 @@ class SliceDiscoveryProblem(Problem):
         "predictions": ArtefactSpec(
             artefact_type=DataPanelArtefact,
             description=(
-                "A Datapanel of the model's predictions with columns `id`,"
+                "A DataPanel of the model's predictions with columns `id`,"
                 "`target`, and `probs.`"
             ),
         ),
         "slices": ArtefactSpec(
             artefact_type=DataPanelArtefact,
-            description="""
-                A datapanel containing ground truth slice labels """,
+            description="A DataPanel of the ground truth slice labels with columns "
+            " `id`, `target`, and `probs.`",
         ),
-        "activations": ArtefactSpec(artefact_type=DataPanelArtefact, description=""),
+        "activations": ArtefactSpec(
+            artefact_type=DataPanelArtefact,
+            description="A DataPanel of the model's activations with columns `id`,"
+            "`act`",
+        ),
         "base_dataset": ArtefactSpec(
-            artefact_type=VisionDatasetArtefact, description="A base dataset"
+            artefact_type=VisionDatasetArtefact,
+            description="A DataPanel representing the base dataset with columns `id` "
+            "and `image`.",
         ),
     }
 

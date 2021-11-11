@@ -11,16 +11,19 @@ from .common.artefact import (
     YAMLArtefact,
 )
 from .config import config
-from .tasks.miniclean import MinicleanProblem
-from .tasks.minidata import MiniDataProblem
-from .tasks.slice import SliceDiscoveryProblem
+from .tasks.miniclean.problem import MinicleanProblem, MiniCleanSolution
+from .tasks.minidata import MiniDataProblem, MiniDataSolution
+from .tasks.slice import SliceDiscoveryProblem, SliceDiscoverySolution
 from .version import __version__
 
 __all__ = [
     "Problem",
     "SliceDiscoveryProblem",
+    "SliceDiscoverySolution",
     "MiniDataProblem",
+    "MiniDataSolution",
     "MinicleanProblem",
+    "MiniCleanSolution",
     "Artefact",
     "YAMLArtefact",
     "DataPanelArtefact",

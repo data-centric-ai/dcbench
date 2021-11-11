@@ -1,1 +1,1 @@
-miniclean
+TODO: Provide more details on how to run miniclean evaluation. 

@@ -12,7 +12,8 @@ class MiniDataSolution(Solution):
         "train_ids": ArtefactSpec(
             artefact_type=YAMLArtefact,
             description=(
-                "A list of train example ids from the " ' `id` column of "train_data".'
+                "A list of train example ids from the "
+                " ``id`` column of ``train_data``."
             ),
         ),
     }
@@ -34,10 +35,13 @@ class MiniDataProblem(Problem):
     artefact_specs: Mapping[str, ArtefactSpec] = {
         "train_data": ArtefactSpec(
             artefact_type=DataPanelArtefact,
-            description="""Training data.""",
+            description="A DataPanel of train examples with columns ``id``, "
+            "``input``, and ``target``.",
         ),
         "test_data": ArtefactSpec(
-            artefact_type=DataPanelArtefact, description="""Testing data."""
+            artefact_type=DataPanelArtefact,
+            description="A DataPanel of test examples with columns ``id``, "
+            "``input``, and ``target``.",
         ),
     }
 

@@ -1,10 +1,17 @@
+{full_name}
+--------------------------------------------
+.. sidebar::
+    Task Details
+    
+    :Task ID:      {task_id}
+    :Problems:     {num_problems}
+    :Cloud Storage: {storage_link}
 
 {summary}
 
-:problem class: {problem_class}
-:solution class: {solution_class}
-:cloud storage: {storage_link} 
-:# of problems: {num_problems}
+**Classes**: {problem_class} {solution_class}
+
+
 
 
 Problem Artefacts

@@ -11,8 +11,6 @@ Welcome to dcbench
 
 .. toctree::
    :maxdepth: 2
-   :caption: dcbench is a benchmark of data-centric tasks from across the machine learning lifecycle.
-
 
    getting-started/install.md
    getting-started/nutshell.md
