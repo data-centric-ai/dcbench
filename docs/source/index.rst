@@ -13,8 +13,8 @@ Welcome to dcbench
    :maxdepth: 2
 
    getting-started/install.md
-   getting-started/nutshell.md
    tasks.rst
+   getting-started/nutshell.md
 
 
 .. toctree::

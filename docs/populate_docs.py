@@ -47,7 +47,7 @@ for task in dcbench.tasks:
         problem_artifact_table=get_artifact_table(task),
         solution_class=get_rst_class_ref(task.solution_class),
         solution_artifact_table=get_artifact_table(task.solution_class),
-        storage_link=get_link("browse", os.path.join(BUCKET_BROWSER_URL, task.task_id)),
+        storage_url=os.path.join(BUCKET_BROWSER_URL, task.task_id),
         longer_description=longer_description,
     )
 
