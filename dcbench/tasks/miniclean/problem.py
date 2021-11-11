@@ -3,7 +3,7 @@ from typing import Any, Mapping
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 
-from dcbench.common.artefact import ArtefactSpec, CSVArtefact
+from dcbench.common.artifact import ArtifactSpec, CSVArtifact
 from dcbench.common.problem import Problem
 from dcbench.common.solution import Result, Solution
 
@@ -11,8 +11,8 @@ from .common import Preprocessor
 
 
 class MiniCleanSolution(Solution):
-    artefact_specs: Mapping[str, ArtefactSpec] = {
-        "train_ids": ArtefactSpec(artefact_type=CSVArtefact, description="")
+    artifact_specs: Mapping[str, ArtifactSpec] = {
+        "train_ids": ArtifactSpec(artifact_type=CSVArtifact, description="")
     }
 
 
@@ -29,17 +29,17 @@ class MinicleanProblem(Problem):
         "positive impact on model performance if we were to clean them."
     )
 
-    artefact_specs: Mapping[str, ArtefactSpec] = {
-        "X_train_dirty_a": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "X_train_dirty_b": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "X_train_clean_a": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "X_train_clean_b": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "y_train_a": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "y_train_b": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "X_val": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "y_val": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "X_test": ArtefactSpec(artefact_type=CSVArtefact, description=""),
-        "y_test": ArtefactSpec(artefact_type=CSVArtefact, description=""),
+    artifact_specs: Mapping[str, ArtifactSpec] = {
+        "X_train_dirty_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_train_dirty_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_train_clean_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_train_clean_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "y_train_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "y_train_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_val": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "y_val": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_test": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "y_test": ArtifactSpec(artifact_type=CSVArtifact, description=""),
     }
 
     task_id: str = "miniclean"
@@ -63,13 +63,13 @@ class MinicleanProblem(Problem):
         if not all(isinstance(x, pd.DataFrame) for x in kwargs.values()):
             raise ValueError("The solution objects must be Pandas DataFrame instances.")
 
-        if len(self.artefacts["X_train_dirty_a"].load()) != len(
+        if len(self.artifacts["X_train_dirty_a"].load()) != len(
             kwargs["X_train_selection_a"]
         ):
             raise ValueError(
                 "The first data frame must have the same size as X_train_dirty_a."
             )
-        if len(kwargs) == 2 and len(self.artefacts["X_train_dirty_b"].load()) != len(
+        if len(kwargs) == 2 and len(self.artifacts["X_train_dirty_b"].load()) != len(
             kwargs["X_train_selection_b"]
         ):
             raise ValueError(
@@ -87,14 +87,14 @@ class MinicleanProblem(Problem):
 
     def evaluate(self, solution: Solution) -> "Result":
 
-        # Load scenario artefacts.
-        a = self.artefacts.load()
+        # Load scenario artifacts.
+        a = self.artifacts.load()
 
-        # Load solution artefacts.
-        I_solution_a = solution.artefacts.X_train_selection_a.load()
+        # Load solution artifacts.
+        I_solution_a = solution.artifacts.X_train_selection_a.load()
         I_solution_b = (
-            solution.artefacts.X_train_selection_b.load()
-            if len(solution.artefacts) > 1
+            solution.artifacts.X_train_selection_b.load()
+            if len(solution.artifacts) > 1
             else None
         )
 

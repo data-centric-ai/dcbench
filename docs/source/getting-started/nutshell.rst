@@ -62,33 +62,33 @@ We can get one of these problems with
 
    problem = SliceDiscoveryProblem.from_id("eda4")
 
-``Artefact``
+``Artifact``
 ~~~~~~~~~~~~
 
-Each *problem* is made up of a set of artefacts: a dataset with labelsto clean, a dataset and a model to perform error analysis on. In ``dcbench`` , these artefacts are represented by instances of
-:class:`dcbench.Artefact`. We can think of each :class`Problem` object as a container for :class:`Artefact` objects. 
+Each *problem* is made up of a set of artifacts: a dataset with labelsto clean, a dataset and a model to perform error analysis on. In ``dcbench`` , these artifacts are represented by instances of
+:class:`dcbench.Artifact`. We can think of each :class`Problem` object as a container for :class:`Artifact` objects. 
 
 .. code:: python
 
-   problem.artefacts
+   problem.artifacts
 
    # Out: 
    {
-      "dataset": CSVArtefact()
+      "dataset": CSVArtifact()
    }
 
-   artefact: CSVArtefact = problem["dataset"]
+   artifact: CSVArtifact = problem["dataset"]
 
 
-Note that :class:`Artefact` objects don't actually hold their underlying data in memory. Instead, they hold pointers to where the :class:`Artefact` lives in `dcbench cloud storage <https://console.cloud.google.com/storage/browser/dcbench?authuser=1&project=hai-gcp-fine-grained&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false>`_ and, if it's been downloaded,  where it lives locally on disk. This makes the :class:`Problem` objects very lightweight.  
+Note that :class:`Artifact` objects don't actually hold their underlying data in memory. Instead, they hold pointers to where the :class:`Artifact` lives in `dcbench cloud storage <https://console.cloud.google.com/storage/browser/dcbench?authuser=1&project=hai-gcp-fine-grained&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false>`_ and, if it's been downloaded,  where it lives locally on disk. This makes the :class:`Problem` objects very lightweight.  
 
-**Downloading to disk.** By default, `dcbench` downloads artefacts to `~/.dcbench/artefacts` but this can be configured in the dcbench settings TODO: add support for configuration. To download an :class:`Artefact`  via the Python API, use :meth:`Artefact.download()`. You can also download all the artefacts in a problem with :class:`Problem.download()`.
+**Downloading to disk.** By default, `dcbench` downloads artifacts to `~/.dcbench/artifacts` but this can be configured in the dcbench settings TODO: add support for configuration. To download an :class:`Artifact`  via the Python API, use :meth:`Artifact.download()`. You can also download all the artifacts in a problem with :class:`Problem.download()`.
 
-**Loading into memory.** `dcbench` includes loading functionality for each artefact type. To load an artefact into memory you can use `artefact.load()` . Note that this will also download the artefact if it hasn't yet been downloaded. 
+**Loading into memory.** `dcbench` includes loading functionality for each artifact type. To load an artifact into memory you can use `artifact.load()` . Note that this will also download the artifact if it hasn't yet been downloaded. 
 
-Finally,  we should point out that `problem` is a Python mapping, so we can index it directly to load artefacts.  
+Finally,  we should point out that `problem` is a Python mapping, so we can index it directly to load artifacts.  
 
 .. code:: python
 
-   # this is equivalent to problem.artefacts["dataset"].load()
+   # this is equivalent to problem.artifacts["dataset"].load()
    df: pd.DataFrame = problem["dataset"] 

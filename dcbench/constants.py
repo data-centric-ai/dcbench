@@ -1,4 +1,4 @@
-ARTEFACTS_DIR = "artefacts"
+ARTEFACTS_DIR = "artifacts"
 PROBLEMS_DIR = "problems"
 SOLUTIONS_DIR = "solutions"
 PUBLIC_ARTEFACTS_DIR = "public"

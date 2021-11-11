@@ -37,11 +37,11 @@ class MainGroup(click.Group):
 )
 @click.version_option(prog_name="dcbench", version=__version__)
 @click.option(
-    "--optional-artefacts-url",
-    help="The URL pointing to the optional artefacts bundle.",
+    "--optional-artifacts-url",
+    help="The URL pointing to the optional artifacts bundle.",
 )
 def main(
-    hidden_artefacts_url: Optional[str] = None,
+    hidden_artifacts_url: Optional[str] = None,
     working_dir: Optional[str] = None,
     **kwargs
 ):
@@ -84,14 +84,14 @@ def solutions(scenario_id: str):
     help="The URL pointing to a repository or notebook containing the solution code.",
 )
 @click.option(
-    "--artefacts-url", type=str, help="The URL pointing to the solution artefacts."
+    "--artifacts-url", type=str, help="The URL pointing to the solution artifacts."
 )
 def new_solution(
     scenario_id: str,
     name: Optional[str],
     paper: Optional[str],
     code: Optional[str],
-    artefacts_url: Optional[str],
+    artifacts_url: Optional[str],
 ):
     scenario = Scenario.scenarios.get(scenario_id, None)()
     if scenario is None:
@@ -100,7 +100,7 @@ def new_solution(
         )
         return
     solution = Solution(
-        scenario, name=name, paper=paper, code=code, artefacts_url=artefacts_url
+        scenario, name=name, paper=paper, code=code, artifacts_url=artifacts_url
     )
     solution.save()
     click.echo("New solution saved to:", err=True)

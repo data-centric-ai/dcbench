@@ -4,7 +4,7 @@ import pandas as pd
 from tabulate import tabulate
 
 import dcbench
-from dcbench.common.artefact import ArtefactContainerClass
+from dcbench.common.artifact import ArtifactContainerClass
 
 BUCKET_BROWSER_URL = "https://console.cloud.google.com/storage/browser/dcbench"
 
@@ -17,15 +17,15 @@ def get_link(text: str, url: str):
     return f"`{text} <{url}>`_"
 
 
-def get_artefact_table(task: ArtefactContainerClass):
+def get_artifact_table(task: ArtifactContainerClass):
     df = pd.DataFrame(
         [
             {
                 "name": f"``{name}``",
-                "type": get_rst_class_ref(spec.artefact_type),
+                "type": get_rst_class_ref(spec.artifact_type),
                 "description": spec.description,
             }
-            for name, spec in task.artefact_specs.items()
+            for name, spec in task.artifact_specs.items()
         ]
     ).set_index(keys="name")
 
@@ -44,9 +44,9 @@ for task in dcbench.tasks:
         num_problems=len(task.instances),
         task_id=f"``{task.task_id}``",
         problem_class=get_rst_class_ref(task),
-        problem_artefact_table=get_artefact_table(task),
+        problem_artifact_table=get_artifact_table(task),
         solution_class=get_rst_class_ref(task.solution_class),
-        solution_artefact_table=get_artefact_table(task.solution_class),
+        solution_artifact_table=get_artifact_table(task.solution_class),
         storage_link=get_link("browse", os.path.join(BUCKET_BROWSER_URL, task.task_id)),
         longer_description=longer_description,
     )

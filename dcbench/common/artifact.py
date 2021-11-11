@@ -18,6 +18,7 @@ from meerkat.tools.lazy_loader import LazyLoader
 from tqdm import tqdm
 
 import dcbench.constants as constants
+from dcbench.common.modeling import Model
 from dcbench.config import config
 
 storage = LazyLoader("google.cloud.storage")
@@ -53,14 +54,14 @@ def _url_exists(url: str):
         return False
 
 
-class Artefact(ABC):
+class Artifact(ABC):
 
     DEFAULT_EXT: str = ""
     isdir: bool = False
 
-    def __init__(self, artefact_id: str, **kwargs) -> None:
-        self.path = f"{artefact_id}.{self.DEFAULT_EXT}"
-        self.id = artefact_id
+    def __init__(self, artifact_id: str, **kwargs) -> None:
+        self.path = f"{artifact_id}.{self.DEFAULT_EXT}"
+        self.id = artifact_id
         os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
         super().__init__()
 
@@ -85,7 +86,7 @@ class Artefact(ABC):
     def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
         if not os.path.exists(self.local_path):
             raise ValueError(
-                f"Could not find Artefact to upload at '{self.local_path}'. "
+                f"Could not find Artifact to upload at '{self.local_path}'. "
                 "Are you sure it is stored locally?"
             )
         if self.is_uploaded and not force:
@@ -122,8 +123,8 @@ class Artefact(ABC):
     def _ensure_downloaded(self):
         if not self.is_downloaded:
             raise ValueError(
-                "Cannot load Artefact that has not been downloaded. "
-                "Call `artefact.download()`."
+                "Cannot load Artifact that has not been downloaded. "
+                "Call `artifact.download()`."
             )
 
     @abstractmethod
@@ -135,47 +136,49 @@ class Artefact(ABC):
         pass
 
     @classmethod
-    def from_data(cls, data: any, artefact_id: str = None):
-        if artefact_id is None:
-            artefact_id = uuid.uuid4().hex
+    def from_data(cls, data: any, artifact_id: str = None):
+        if artifact_id is None:
+            artifact_id = uuid.uuid4().hex
         # TODO ():At some point we should probably enforce that ids are unique
 
-        if cls is Artefact:
+        if cls is Artifact:
             # if called on base class, infer which class to use
             if isinstance(data, mk.DataPanel):
-                cls = DataPanelArtefact
+                cls = DataPanelArtifact
             elif isinstance(data, pd.DataFrame):
-                cls = CSVArtefact
+                cls = CSVArtifact
+            elif isinstance(data, Model):
+                cls = ModelArtifact
             else:
                 raise ValueError(
-                    f"No Artefact in dcbench for object of type {type(data)}"
+                    f"No Artifact in dcbench for object of type {type(data)}"
                 )
 
-        artefact = cls(artefact_id=artefact_id)
-        artefact.save(data)
-        return artefact
+        artifact = cls(artifact_id=artifact_id)
+        artifact.save(data)
+        return artifact
 
     @staticmethod
     def from_yaml(loader: yaml.Loader, node):
         data = loader.construct_mapping(node, deep=True)
-        return data["class"](artefact_id=data["artefact_id"])
+        return data["class"](artifact_id=data["artifact_id"])
 
     @staticmethod
-    def to_yaml(dumper: yaml.Dumper, data: Artefact):
+    def to_yaml(dumper: yaml.Dumper, data: Artifact):
         data = {
-            "artefact_id": data.id,
+            "artifact_id": data.id,
             "class": type(data),
         }
-        node = dumper.represent_mapping("!Artefact", data)
+        node = dumper.represent_mapping("!Artifact", data)
         return node
 
 
 # need to use multi_representer to support
-yaml.add_multi_representer(Artefact, Artefact.to_yaml)
-yaml.add_constructor("!Artefact", Artefact.from_yaml)
+yaml.add_multi_representer(Artifact, Artifact.to_yaml)
+yaml.add_constructor("!Artifact", Artifact.from_yaml)
 
 
-class CSVArtefact(Artefact):
+class CSVArtifact(Artifact):
 
     DEFAULT_EXT: str = "csv"
 
@@ -187,7 +190,7 @@ class CSVArtefact(Artefact):
         return data.to_csv(self.local_path)
 
 
-class YAMLArtefact(Artefact):
+class YAMLArtifact(Artifact):
 
     DEFAULT_EXT: str = "yaml"
 
@@ -199,7 +202,7 @@ class YAMLArtefact(Artefact):
         return yaml.dump(data, open(self.local_path))
 
 
-class DataPanelArtefact(Artefact):
+class DataPanelArtifact(Artifact):
 
     DEFAULT_EXT: str = "mk"
     isdir: bool = True
@@ -212,7 +215,7 @@ class DataPanelArtefact(Artefact):
         return data.write(self.local_path)
 
 
-class VisionDatasetArtefact(DataPanelArtefact):
+class VisionDatasetArtifact(DataPanelArtifact):
 
     DEFAULT_EXT: str = "mk"
     isdir: bool = True
@@ -228,8 +231,8 @@ class VisionDatasetArtefact(DataPanelArtefact):
             dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir)
         else:
             raise ValueError(f"No dataset named '{name}' supported by dcbench.")
-        artefact = cls.from_data(data=dp, artefact_id=name)
-        return artefact
+        artifact = cls.from_data(data=dp, artifact_id=name)
+        return artifact
 
     def download(self, force: bool = False):
         dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
@@ -239,22 +242,31 @@ class VisionDatasetArtefact(DataPanelArtefact):
             self.save(data=dp)
 
 
-class ModelArtefact(Artefact):
+class ModelArtifact(Artifact):
 
     DEFAULT_EXT: str = "pt"
 
-    def load(self) -> pd.DataFrame:
-        pass
-        # TODO: add custom model class
+    def load(self) -> Model:
+        dct = torch.load(self.local_path, map_location="cpu")
+        model = dct["class"](dct["config"])
+        model.load_state_dict(dct["state_dict"])
+        return model
 
-    def save(self, data) -> None:
-        return torch.save({"state_dict": data.state_dict()}, self.local_path)
+    def save(self, data: Model) -> None:
+        return torch.save(
+            {
+                "state_dict": data.state_dict(),
+                "config": data.config,
+                "class": type(data),
+            },
+            self.local_path,
+        )
 
 
 BASIC_TYPE = Union[int, float, str, bool]
 
 
-class ArtefactContainerClass(ABCMeta):
+class ArtifactContainerClass(ABCMeta):
     @property
     def instances_path(self):
         return os.path.join(self.task_id, self.container_type, "instances.yaml")
@@ -267,7 +279,7 @@ class ArtefactContainerClass(ABCMeta):
     def remote_instances_url(self):
         return os.path.join(config.public_remote_url, self.instances_path)
 
-    def write_instances(self, containers: List[ArtefactContainer]):
+    def write_instances(self, containers: List[ArtifactContainer]):
         for container in containers:
             assert isinstance(container, self)
             # container.upload()
@@ -275,23 +287,23 @@ class ArtefactContainerClass(ABCMeta):
         os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
         yaml.dump(containers, open(self.local_instances_path, "w"))
 
-    def upload_instances(self, include_artefacts: bool = False):
+    def upload_instances(self, include_artifacts: bool = False):
         client = storage.Client()
         bucket = client.get_bucket(config.public_bucket_name)
         for container in tqdm(self.instances):
             assert isinstance(container, self)
-            if include_artefacts:
+            if include_artifacts:
                 container.upload(bucket=bucket)
         blob = bucket.blob(self.instances_path)
         blob.upload_from_filename(self.local_instances_path)
 
-    def download_instances(self, include_artefacts: bool = False):
+    def download_instances(self, include_artifacts: bool = False):
         os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
         urlretrieve(self.remote_instances_url, self.local_instances_path)
 
         for container in self.instances:
             assert isinstance(container, self)
-            if include_artefacts:
+            if include_artifacts:
                 container.upload()
 
     def describe_instances(self):
@@ -327,52 +339,52 @@ class ArtefactContainerClass(ABCMeta):
             raise ValueError
 
     @staticmethod
-    def to_yaml(dumper: yaml.Dumper, data: ArtefactContainerClass):
+    def to_yaml(dumper: yaml.Dumper, data: ArtifactContainerClass):
         return dumper.represent_scalar(
-            tag="!ArtefactContainerClass", value=data.task_id
+            tag="!ArtifactContainerClass", value=data.task_id
         )
 
 
-yaml.add_multi_representer(ArtefactContainerClass, ArtefactContainerClass.to_yaml)
-yaml.add_constructor("!ArtefactContainerClass", ArtefactContainerClass.from_yaml)
+yaml.add_multi_representer(ArtifactContainerClass, ArtifactContainerClass.to_yaml)
+yaml.add_constructor("!ArtifactContainerClass", ArtifactContainerClass.from_yaml)
 
 
 @dataclass
-class ArtefactSpec:
+class ArtifactSpec:
     description: str
-    artefact_type: type
+    artifact_type: type
 
 
-class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
+class ArtifactContainer(ABC, Mapping, metaclass=ArtifactContainerClass):
 
-    artefact_specs: Mapping[str, ArtefactSpec]
+    artifact_specs: Mapping[str, ArtifactSpec]
     task_id: str = "none"
 
     def __init__(
         self,
         container_id: str,
-        artefacts: Mapping[str, Artefact],
+        artifacts: Mapping[str, Artifact],
         attributes: Mapping[str, BASIC_TYPE] = None,
     ):
         self.container_id = container_id
-        artefacts = self._create_artefacts(artefacts=artefacts)
-        self._check_artefact_specs(artefacts=artefacts)
-        self.artefacts = artefacts
+        artifacts = self._create_artifacts(artifacts=artifacts)
+        self._check_artifact_specs(artifacts=artifacts)
+        self.artifacts = artifacts
         if attributes is None:
             attributes = {}
         self._attributes = attributes
 
     @classmethod
-    def from_artefacts(
+    def from_artifacts(
         cls,
-        artefacts: Mapping[str, Artefact],
+        artifacts: Mapping[str, Artifact],
         attributes: Mapping[str, BASIC_TYPE] = None,
         container_id: str = None,
     ):
         if container_id is None:
             container_id = uuid.uuid4().hex
         container = cls(
-            container_id=container_id, artefacts=artefacts, attributes=attributes
+            container_id=container_id, artifacts=artifacts, attributes=attributes
         )
         return container
 
@@ -385,44 +397,44 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         self._attributes = value
 
     def __getitem__(self, key):
-        artefact = self.artefacts.__getitem__(key)
-        if not artefact.is_downloaded:
-            artefact.download()
-        return self.artefacts.__getitem__(key).load()
+        artifact = self.artifacts.__getitem__(key)
+        if not artifact.is_downloaded:
+            artifact.download()
+        return self.artifacts.__getitem__(key).load()
 
     def __iter__(self):
-        return self.artefacts.__iter__()
+        return self.artifacts.__iter__()
 
     def __len__(self):
-        return self.artefacts.__len__()
+        return self.artifacts.__len__()
 
     @property
     def is_downloaded(self) -> bool:
-        return all(x.is_downloaded for x in self.artefacts.values())
+        return all(x.is_downloaded for x in self.artifacts.values())
 
     @property
     def is_uploaded(self) -> bool:
-        return all(x.is_uploaded for x in self.artefacts.values())
+        return all(x.is_uploaded for x in self.artifacts.values())
 
     def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
         if bucket is None:
             client = storage.Client()
             bucket = client.get_bucket(config.public_bucket_name)
 
-        for artefact in self.artefacts.values():
-            artefact.upload(force=force, bucket=bucket)
+        for artifact in self.artifacts.values():
+            artifact.upload(force=force, bucket=bucket)
 
     def download(self, force: bool = False) -> bool:
-        for artefact in self.artefacts.values():
-            artefact.download(force=force)
+        for artifact in self.artifacts.values():
+            artifact.download(force=force)
 
-    def _create_artefacts(self, artefacts: Mapping[str, Artefact]):
+    def _create_artifacts(self, artifacts: Mapping[str, Artifact]):
         return {
-            name: artefact
-            if isinstance(artefact, Artefact)
-            else Artefact.from_data(
-                data=artefact,
-                artefact_id=os.path.join(
+            name: artifact
+            if isinstance(artifact, Artifact)
+            else Artifact.from_data(
+                data=artifact,
+                artifact_id=os.path.join(
                     self.task_id,
                     self.container_type,
                     constants.ARTEFACTS_DIR,
@@ -430,24 +442,24 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
                     name,
                 ),
             )
-            for name, artefact in artefacts.items()
+            for name, artifact in artifacts.items()
         }
 
     @classmethod
-    def _check_artefact_specs(cls, artefacts: Mapping[str, Artefact]):
-        for name, artefact in artefacts.items():
-            if name not in cls.artefact_specs:
+    def _check_artifact_specs(cls, artifacts: Mapping[str, Artifact]):
+        for name, artifact in artifacts.items():
+            if name not in cls.artifact_specs:
                 raise ValueError(
-                    f"Passed artefact name '{name}', but the specification for"
+                    f"Passed artifact name '{name}', but the specification for"
                     f" {cls.__name__} doesn't include it."
                 )
 
-            if not isinstance(artefact, cls.artefact_specs[name].artefact_type):
+            if not isinstance(artifact, cls.artifact_specs[name].artifact_type):
                 raise ValueError(
-                    f"Passed an artefact of type {type(artefact)} to {cls.__name__}"
-                    f" for the artefact named '{name}'. The specification for"
-                    f" {cls.__name__} expects an Artefact of type"
-                    f" {cls.artefact_spec[name].artefact_type}."
+                    f"Passed an artifact of type {type(artifact)} to {cls.__name__}"
+                    f" for the artifact named '{name}'. The specification for"
+                    f" {cls.__name__} expects an Artifact of type"
+                    f" {cls.artifact_spec[name].artifact_type}."
                 )
 
     @staticmethod
@@ -455,27 +467,27 @@ class ArtefactContainer(ABC, Mapping, metaclass=ArtefactContainerClass):
         data = loader.construct_mapping(node, deep=True)
         return data["class"](
             container_id=data["container_id"],
-            artefacts=data["artefacts"],
+            artifacts=data["artifacts"],
             attributes=data["attributes"],
         )
 
     @staticmethod
-    def to_yaml(dumper: yaml.Dumper, data: ArtefactContainer):
+    def to_yaml(dumper: yaml.Dumper, data: ArtifactContainer):
         data = {
             "class": type(data),
             "container_id": data.container_id,
             "attributes": data._attributes,
-            "artefacts": data.artefacts,
+            "artifacts": data.artifacts,
         }
-        return dumper.represent_mapping("!ArtefactContainer", data)
+        return dumper.represent_mapping("!ArtifactContainer", data)
 
     def __repr__(self):
-        artefacts = {k: v.__class__.__name__ for k, v in self.artefacts.items()}
+        artifacts = {k: v.__class__.__name__ for k, v in self.artifacts.items()}
         return (
-            f"{self.__class__.__name__}(artefacts={artefacts}, "
+            f"{self.__class__.__name__}(artifacts={artifacts}, "
             f"attributes={self.attributes})"
         )
 
 
-yaml.add_multi_representer(ArtefactContainer, ArtefactContainer.to_yaml)
-yaml.add_constructor("!ArtefactContainer", ArtefactContainer.from_yaml)
+yaml.add_multi_representer(ArtifactContainer, ArtifactContainer.to_yaml)
+yaml.add_constructor("!ArtifactContainer", ArtifactContainer.from_yaml)

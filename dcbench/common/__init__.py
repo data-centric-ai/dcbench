@@ -1,11 +1,11 @@
 # flake8: noqa
 
-from .artefact import (
-    Artefact,
-    CSVArtefact,
-    DataPanelArtefact,
-    ModelArtefact,
-    VisionDatasetArtefact,
+from .artifact import (
+    Artifact,
+    CSVArtifact,
+    DataPanelArtifact,
+    ModelArtifact,
+    VisionDatasetArtifact,
 )
 from .problem import Problem
 from .result import Result

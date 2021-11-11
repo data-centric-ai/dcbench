@@ -3,31 +3,31 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from dcbench.common.artefact import CSVArtefact, DataPanelArtefact
+from dcbench.common.artifact import CSVArtifact, DataPanelArtifact
 
 
 @pytest.fixture(params=["csv"])
-def artefact(request):
-    artefact_type = request.param
+def artifact(request):
+    artifact_type = request.param
 
-    artefact_id = f"test_{artefact_type}"
-    if artefact_type == "csv":
-        return CSVArtefact.from_data(
-            pd.DataFrame({"a": np.arange(5), "b": np.ones(5)}), artefact_id=artefact_id
+    artifact_id = f"test_{artifact_type}"
+    if artifact_type == "csv":
+        return CSVArtifact.from_data(
+            pd.DataFrame({"a": np.arange(5), "b": np.ones(5)}), artifact_id=artifact_id
         )
-    elif artefact_type == "datapanel":
-        return DataPanelArtefact.from_data(
-            mk.DataPanel({"a": np.arange(5), "b": np.ones(5)}, artefact_id=artefact_id)
+    elif artifact_type == "datapanel":
+        return DataPanelArtifact.from_data(
+            mk.DataPanel({"a": np.arange(5), "b": np.ones(5)}, artifact_id=artifact_id)
         )
     else:
-        raise ValueError(f"Artefact type '{artefact_type}' not supported.")
+        raise ValueError(f"Artifact type '{artifact_type}' not supported.")
 
 
 @pytest.mark.skip(reason="requires gcloud authentication")
-def test_artefact_upload(artefact):
-    artefact.upload()
-    # assert isinstance(artefact, CSVArtefact)
+def test_artifact_upload(artifact):
+    artifact.upload()
+    # assert isinstance(artifact, CSVArtifact)
 
 
-def test_artefact_download(artefact):
-    artefact.download()
+def test_artifact_download(artifact):
+    artifact.download()
