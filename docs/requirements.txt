@@ -5,3 +5,4 @@ recommonmark
 toml 
 furo
 ipython
+"dcbench @ git+https://github.com/data-centric-ai/dcbench@main"
