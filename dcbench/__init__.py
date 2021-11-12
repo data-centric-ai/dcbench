@@ -3,28 +3,35 @@ of data preparation and handling in the context of AI workflows."""
 # flake8: noqa
 
 from .__main__ import main
-from .common import Artifact, Problem, Solution
+from .common import Artifact, Problem, Solution, Task
 from .common.artifact import (
     CSVArtifact,
     DataPanelArtifact,
+    ModelArtifact,
     VisionDatasetArtifact,
     YAMLArtifact,
 )
 from .config import config
-from .tasks.miniclean.problem import MinicleanProblem, MiniCleanSolution
-from .tasks.minidata import MiniDataProblem, MiniDataSolution
-from .tasks.slice import SliceDiscoveryProblem, SliceDiscoverySolution
+from .tasks.miniclean import MinicleanProblem
+from .tasks.miniclean import task as miniclean
+from .tasks.minidata import MiniDataProblem
+from .tasks.minidata import task as minidata
+from .tasks.slice_discovery import SliceDiscoveryProblem
+from .tasks.slice_discovery import task as slice_discovery
 from .version import __version__
 
 __all__ = [
-    "Problem",
-    "SliceDiscoveryProblem",
-    "SliceDiscoverySolution",
-    "MiniDataProblem",
-    "MiniDataSolution",
-    "MinicleanProblem",
-    "MiniCleanSolution",
+    "minidata",
+    "miniclean",
+    "slice_discovery",
     "Artifact",
+    "Problem",
+    "Solution",
+    "MinicleanProblem",
+    "MiniDataProblem",
+    "SliceDiscoveryProblem",
+    "Task",
+    "ModelArtifact",
     "YAMLArtifact",
     "DataPanelArtifact",
     "VisionDatasetArtifact",
@@ -32,4 +39,9 @@ __all__ = [
     "config",
 ]
 
-tasks = [MiniDataProblem, SliceDiscoveryProblem, MinicleanProblem]
+
+tasks = [
+    minidata,
+    slice_discovery,
+    miniclean,
+]

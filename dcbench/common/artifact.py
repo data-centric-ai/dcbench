@@ -4,10 +4,10 @@ import os
 import subprocess
 import tempfile
 import uuid
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, List, Union
+from typing import Any, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
 
@@ -15,7 +15,6 @@ import meerkat as mk
 import pandas as pd
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
-from tqdm import tqdm
 
 import dcbench.constants as constants
 from dcbench.common.modeling import Model
@@ -247,6 +246,7 @@ class ModelArtifact(Artifact):
     DEFAULT_EXT: str = "pt"
 
     def load(self) -> Model:
+        self._ensure_downloaded()
         dct = torch.load(self.local_path, map_location="cpu")
         model = dct["class"](dct["config"])
         model.load_state_dict(dct["state_dict"])
@@ -266,96 +266,13 @@ class ModelArtifact(Artifact):
 BASIC_TYPE = Union[int, float, str, bool]
 
 
-class ArtifactContainerClass(ABCMeta):
-    @property
-    def instances_path(self):
-        return os.path.join(self.task_id, self.container_type, "instances.yaml")
-
-    @property
-    def local_instances_path(self):
-        return os.path.join(config.local_dir, self.instances_path)
-
-    @property
-    def remote_instances_url(self):
-        return os.path.join(config.public_remote_url, self.instances_path)
-
-    def write_instances(self, containers: List[ArtifactContainer]):
-        for container in containers:
-            assert isinstance(container, self)
-            # container.upload()
-
-        os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
-        yaml.dump(containers, open(self.local_instances_path, "w"))
-
-    def upload_instances(self, include_artifacts: bool = False):
-        client = storage.Client()
-        bucket = client.get_bucket(config.public_bucket_name)
-        for container in tqdm(self.instances):
-            assert isinstance(container, self)
-            if include_artifacts:
-                container.upload(bucket=bucket)
-        blob = bucket.blob(self.instances_path)
-        blob.upload_from_filename(self.local_instances_path)
-
-    def download_instances(self, include_artifacts: bool = False):
-        os.makedirs(os.path.dirname(self.local_instances_path), exist_ok=True)
-        urlretrieve(self.remote_instances_url, self.local_instances_path)
-
-        for container in self.instances:
-            assert isinstance(container, self)
-            if include_artifacts:
-                container.upload()
-
-    def describe_instances(self):
-        return pd.DataFrame(
-            [
-                {"id": problem.container_id, **problem.attributes}
-                for problem in self.instances
-            ]
-        )
-
-    @property
-    def instances(self):
-        if not os.path.exists(self.local_instances_path):
-            self.download_instances()
-        return yaml.load(open(self.local_instances_path), Loader=yaml.FullLoader)
-
-    @staticmethod
-    def from_yaml(loader: yaml.Loader, node):
-        data = loader.construct_scalar(node)
-        if data == "slice_discovery":
-            from ..tasks.slice import SliceDiscoveryProblem
-
-            return SliceDiscoveryProblem
-        elif data == "miniclean":
-            from ..tasks.miniclean import MinicleanProblem
-
-            return MinicleanProblem
-        elif data == "minidata":
-            from ..tasks.minidata import MiniDataProblem
-
-            return MiniDataProblem
-        else:
-            raise ValueError
-
-    @staticmethod
-    def to_yaml(dumper: yaml.Dumper, data: ArtifactContainerClass):
-        return dumper.represent_scalar(
-            tag="!ArtifactContainerClass", value=data.task_id
-        )
-
-
-yaml.add_multi_representer(ArtifactContainerClass, ArtifactContainerClass.to_yaml)
-yaml.add_constructor("!ArtifactContainerClass", ArtifactContainerClass.from_yaml)
-
-
 @dataclass
 class ArtifactSpec:
     description: str
     artifact_type: type
 
 
-class ArtifactContainer(ABC, Mapping, metaclass=ArtifactContainerClass):
+class ArtifactContainer(ABC, Mapping):
 
     artifact_specs: Mapping[str, ArtifactSpec]
     task_id: str = "none"

@@ -18,17 +18,6 @@ class MiniCleanSolution(Solution):
 
 class MinicleanProblem(Problem):
 
-    # TODO: consider changing this name, word minimal doesn't feel appropriate since
-    # the budget is fixed
-    full_name = "Minimal Feature Cleaning"
-
-    summary = (
-        "When it comes to data preparation, data cleaning is often an essential yet "
-        "quite costly task. If we are given a fixed cleaning budget, the challenge is "
-        "to find the training data examples that would would bring the biggest "
-        "positive impact on model performance if we were to clean them."
-    )
-
     artifact_specs: Mapping[str, ArtifactSpec] = {
         "X_train_dirty_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
         "X_train_dirty_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
@@ -43,8 +32,6 @@ class MinicleanProblem(Problem):
     }
 
     task_id: str = "miniclean"
-
-    solution_class: type = MiniCleanSolution
 
     @classmethod
     def list(cls):
