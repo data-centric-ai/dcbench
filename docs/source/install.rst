@@ -1,3 +1,6 @@
+
+.. _installing:
+
 🚀 Installing dcbench
 ============================
 
@@ -31,8 +34,9 @@ You can install from a clone of the ``dcbench`` `repo <https://github.com/data-c
     cd dcbench
     pip install -e .
 
+.. _configuring:
 
-⚙️ Configuring ``dcbench``
+⚙️ Configuring dcbench
 ============================
 
 Several aspects of ``dcbench`` behavior can be configured by the user. 
@@ -45,11 +49,14 @@ You can see the current state of the ``dcbench`` configuration with:
     import dcbench
     dcbench.config    
 
+Configuring with YAML
+----------------------
+
 To change the configuration create a YAML file, like the one below:
 
 .. code-block:: yaml
     local_dir: "/path/to/storage"
-    publick_bucket_name: str = "dcbench-test"
+    public_bucket_name: "dcbench-test"
 
 Then set the environment variable ``DCBENCH_CONFIG`` to point to the file:
 
@@ -63,3 +70,15 @@ If you're using a conda, you can permanently set this variable for your environm
 
     conda env config vars set DCBENCH_CONFIG="path/to/dcbench-config.yaml"
     conda activate env_name  # need to reactivate the environment 
+
+
+Configuring Programmatically
+------------------------------
+
+You can also update the config programmatically, though unlike the YAML method above, these changes will not persist beyond the lifetime of your program. 
+
+.. code-block:: python
+
+    dcbench.config.local_dir = "/path/to/storage"
+    dcbench.config.public_bucket_name = "dcbench-test"
+

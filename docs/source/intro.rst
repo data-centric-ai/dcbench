@@ -27,8 +27,11 @@ it easy to download data, run evaluations, and compare methods.
 
 🧭 API Walkthrough
 ---------------------------------------
+..
+    TODO: Add a schematic outlining the clas structure 
 
-.. code-block:: console
+.. code-block:: bash
+
     pip install dcbench
 
 
@@ -86,14 +89,10 @@ Easier yet, we can use the index operator directly on :class:`Problem` objects t
    
    problem["activations"]  # shorthand for problem.artifacts["model"].load()
 
-Note that :class:`Artifact` objects don't actually hold their underlying data in memory. Instead, they hold pointers to where the :class:`Artifact` lives in `dcbench cloud storage <https://console.cloud.google.com/storage/browser/dcbench?authuser=1&project=hai-gcp-fine-grained&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false>`_ and, if it's been downloaded,  where it lives locally on disk. This makes the :class:`Problem` objects very lightweight.  
-
 
 .. admonition:: Downloading to Disk
 
-   By default, ``dcbench`` downloads artifacts to ``~/.dcbench/artifacts`` but this can be configured in the ``dcbench`` settings TODO: add support for configuration. To download an :class:`Artifact`  via the Python API, use :meth:`Artifact.download()`. You can also download all the artifacts in a problem with :class:`Problem.download()`.
-
-**Loading into memory.** `dcbench` includes loading functionality for each artifact type. To load an artifact into memory you can use `artifact.load()` . Note that this will also download the artifact to disk if it hasn't yet been downloaded. 
+   By default, ``dcbench`` downloads artifacts to ``~/.dcbench`` but this can be configured by creating a ``dcbench-config.yaml`` as described in :any:`configuring`. To download an :class:`Artifact`  via the Python API, use :meth:`Artifact.download()`. You can also download all the artifacts in a problem with :class:`Problem.download()`.
 
 
 ``Solution``
