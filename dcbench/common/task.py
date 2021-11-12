@@ -59,8 +59,8 @@ class Task:
         os.makedirs(os.path.dirname(self.local_problems_path), exist_ok=True)
         urlretrieve(self.remote_problems_url, self.local_problems_path)
 
-        for container in self.problems:
-            assert isinstance(container, self)
+        for container in self.problems.values():
+            assert isinstance(container, self.problem_class)
             if include_artifacts:
                 container.upload()
 
