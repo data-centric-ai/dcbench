@@ -65,7 +65,7 @@ class Task:
                 container.upload()
 
     @property
-    @functools.lru_cache
+    @functools.lru_cache()
     def problems_df(self):
         return pd.DataFrame(
             [
@@ -75,7 +75,7 @@ class Task:
         )
 
     @property
-    @functools.lru_cache
+    @functools.lru_cache()
     def problems(self):
         if not os.path.exists(self.local_problems_path):
             self.download_problems()
