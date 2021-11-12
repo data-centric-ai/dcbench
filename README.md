@@ -37,19 +37,15 @@ and explore the data-centric problems in the benchmark:
 import dcbench
 dcbench.tasks
 ```
+To learn more, follow the 'walkthrough' in our docs. 
 
 
 ## 💡 What is dcbench?
-This benchmark evaluates the steps in your machine learning workflow beyond model training and tuning. This includes feature cleaning, slice discovery, and coreset selection. We call these “data-centric” tasks because they're focused on exploring and manipulating data – not training models. ``dcbench`` supports a growing number of them:
+This benchmark evaluates the steps in your machine learning workflow beyond model training and tuning. This includes feature cleaning, slice discovery, and coreset selection. We call these “data-centric” tasks because they're focused on exploring and manipulating data – not training models. ``dcbench`` supports a growing list of them:
 
-It features a growing list of data-centric *tasks*:
-
-* Minimal data cleaning (`miniclean`)
-* Label Correction (`labelfix`)
-* Slice Discovery (`errmod`)
-* Minimal training dataset selection (`minitrain`)
-
-Each task features a a collection of *problems*. *What is a problem?* A useful analogy is: chess problems are to a full chess game as *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label correction phase where labels are audited and fixed. Our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned. 
+* [Minimal Data Selection](https://dcbench.readthedocs.io/en/latest/tasks.html#minimal-data-selection)
+* [Slice Discovery](https://dcbench.readthedocs.io/en/latest/tasks.html#slice-discovery)
+* [Minimal Feature Cleaning](https://dcbench.readthedocs.io/en/latest/tasks.html#minimal-feature-cleaning)
 
 
 ``dcbench`` includes tasks that look very different from one another: the inputs and
@@ -63,7 +59,6 @@ So, ``dcbench`` is designed to be a common home for these diverse, but
 related, tasks. In ``dcbench`` all of these tasks are structured in a
 similar manner and they are supported by a common Python API that makes
 it easy to download data, run evaluations, and compare methods.
-
 
 
 ## ✉️ About
