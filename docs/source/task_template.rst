@@ -1,6 +1,6 @@
 .. _{task_id}:
 
-{full_name}
+{name}
 --------------------------------------------
 
 .. sidebar::
@@ -17,8 +17,6 @@
 
     We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <{storage_url}>`_. 
 
-
-:ref:`minidata`
 
 Problem Artifacts
 __________________
