@@ -3,7 +3,7 @@
 
 
 
-⚙️ Walkthrough
+🧭 API Walkthrough
 ---------------------------------------
 
 ``Task``

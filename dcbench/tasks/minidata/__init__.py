@@ -1,3 +1,6 @@
+import os
+import shutil
+import tempfile
 from typing import Any, Mapping, Sequence
 
 import yaml
@@ -34,6 +37,11 @@ class MiniDataProblem(Problem):
             description="A DataPanel of train examples with columns ``id``, "
             "``input``, and ``target``.",
         ),
+        "val_data": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
+            description="A DataPanel of validation examples with columns ``id``, "
+            "``input``, and ``target``.",
+        ),
         "test_data": ArtifactSpec(
             artifact_type=DataPanelArtifact,
             description="A DataPanel of test examples with columns ``id``, "
@@ -49,18 +57,23 @@ class MiniDataProblem(Problem):
         train_ids = solution["train_ids"]
 
         train_dp = train_dp.lz[train_dp["id"].isin(train_ids)]
-        train_dp.write()
+        dirpath = tempfile.mkdtemp()
+        dp_path = os.path.join(dirpath, "dataset.mk")
+
+        train_dp.write(dp_path)
 
         from unagi.unagi import main
         from unagi.utils.config_utils import build_config
 
-        from .unagi_configs import DEFAULT_CONFIG
+        from .unagi_configs import RESNET_CONFIG
 
-        config = DEFAULT_CONFIG.copy()
-        config[""]
+        config = RESNET_CONFIG.copy()
+        config["dataset"]["path_to_dp"] = dp_path
+        config["dataset"]["index_name"] = "id"
         config = build_config(config)
 
         main(config)
+        shutil.rmtree(dirpath)
 
         # TODO: Plug unagi in here
         # model = fit(train_dp)

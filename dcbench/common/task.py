@@ -1,7 +1,7 @@
 import functools
 import os
 from dataclasses import dataclass
-from typing import Dict
+from typing import Sequence
 from urllib.request import urlretrieve
 
 import pandas as pd
@@ -37,18 +37,23 @@ class Task:
     def remote_problems_url(self):
         return os.path.join(config.public_remote_url, self.problems_path)
 
-    def write_problems(self, containers: Dict[str, ArtifactContainer]):
+    def write_problems(self, containers: Sequence[ArtifactContainer]):
+        ids = []
         for container in containers:
             assert isinstance(container, self.problem_class)
-            # container.upload()
+            ids.append(container.container_id)
 
+        if len(set(ids)) != len(ids):
+            raise ValueError(
+                "Duplicate container ids in the containers passed to `write_problems`."
+            )
         os.makedirs(os.path.dirname(self.local_problems_path), exist_ok=True)
         yaml.dump(containers, open(self.local_problems_path, "w"))
 
     def upload_problems(self, include_artifacts: bool = False):
         client = storage.Client()
         bucket = client.get_bucket(config.public_bucket_name)
-        for container in tqdm(self.problems):
+        for container in tqdm(self.problems.values()):
             assert isinstance(container, self.problem_class)
             if include_artifacts:
                 container.upload(bucket=bucket)
