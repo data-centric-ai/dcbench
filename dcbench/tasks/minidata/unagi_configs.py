@@ -46,11 +46,11 @@ MIXER_CONFIG = {
         "patch": {"type": None},
         "feature": {"type": None},
     },
-    "tasks": {"supervised": {"loss_fn": "cross_entropy", "label": "label"}},
+    "tasks": {"supervised": {"loss_fn": "cross_entropy", "label": "target"}},
     "dataset": {
         "name": "meerkat_dataset",
         "meerkat_dataset_name": None,
-        "index_name": "index",
+        "index_name": "id",
         "task": "multi_class",
         "input_features": [
             {
@@ -60,7 +60,7 @@ MIXER_CONFIG = {
                 "default_transformation": "image_pil_default_transform_transformer",
             }
         ],
-        "output_features": [{"name": "label"}],
+        "output_features": [{"name": "target"}],
         "path_to_dp": None,
         "batch_size": 128,
         "val_batch_size": 128,
@@ -133,11 +133,11 @@ TRANSFORMER_CONFIG = {
         "patch": {"type": None},
         "feature": {"type": None},
     },
-    "tasks": {"supervised": {"loss_fn": "cross_entropy", "label": "label"}},
+    "tasks": {"supervised": {"loss_fn": "cross_entropy", "label": "target"}},
     "dataset": {
         "name": "meerkat_dataset",
         "meerkat_dataset_name": None,
-        "index_name": "index",
+        "index_name": "id",
         "task": "multi_class",
         "batch_size": 128,
         "val_batch_size": 128,
@@ -150,7 +150,7 @@ TRANSFORMER_CONFIG = {
                 "default_transformation": "image_pil_default_transform_transformer",
             }
         ],
-        "output_features": [{"name": "label"}],
+        "output_features": [{"name": "target"}],
         "path_to_dp": None,
     },
     "learner_config": {
@@ -208,11 +208,11 @@ RESNET_CONFIG = {
         "patch": {"type": None},
         "feature": {"type": None},
     },
-    "tasks": {"supervised": {"loss_fn": "cross_entropy", "label": "label"}},
+    "tasks": {"supervised": {"loss_fn": "cross_entropy", "label": "target"}},
     "dataset": {
         "name": "meerkat_dataset",
         "meerkat_dataset_name": None,
-        "index_name": "index",
+        "index_name": "id",
         "task": "multi_class",
         "input_features": [
             {
@@ -222,7 +222,7 @@ RESNET_CONFIG = {
                 "default_transformation": "image_pil_default_transform_resnet",
             }
         ],
-        "output_features": [{"name": "label"}],
+        "output_features": [{"name": "target"}],
         "path_to_dp": None,
         "batch_size": 128,
         "val_batch_size": 128,

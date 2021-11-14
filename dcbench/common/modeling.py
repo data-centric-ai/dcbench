@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 import PIL
-import pytorch_lightning as pl
+#import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
