@@ -44,6 +44,8 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc.typehints",
     "sphinx.ext.autosummary",
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
     "sphinx_rtd_theme",
     "nbsphinx",
     "recommonmark",

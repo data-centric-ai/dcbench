@@ -4,7 +4,6 @@ import pandas as pd
 from tabulate import tabulate
 
 import dcbench
-from dcbench.common.artifact import ArtifactContainerClass
 
 BUCKET_BROWSER_URL = "https://console.cloud.google.com/storage/browser/dcbench"
 
@@ -17,7 +16,7 @@ def get_link(text: str, url: str):
     return f"`{text} <{url}>`_"
 
 
-def get_artifact_table(task: ArtifactContainerClass):
+def get_artifact_table(task: dcbench.Task):
     df = pd.DataFrame(
         [
             {
@@ -32,22 +31,22 @@ def get_artifact_table(task: ArtifactContainerClass):
     return tabulate(df, headers="keys", tablefmt="rst")
 
 
-sections = ["🎯 Tasks\n========="]
+sections = [".. _tasks:\n\n🎯 Tasks\n========="]
 template = open("source/task_template.rst").read()
 for task in dcbench.tasks:
     longer_description = open(
         os.path.join("source/task_descriptions", f"{task.task_id}.rst")
     ).read()
     section = template.format(
-        full_name=task.full_name,
+        name=task.name,
         summary=task.summary,
-        num_problems=len(task.instances),
-        task_id=f"``{task.task_id}``",
-        problem_class=get_rst_class_ref(task),
-        problem_artifact_table=get_artifact_table(task),
+        num_problems=len(task.problems),
+        task_id=task.task_id,
+        problem_class=get_rst_class_ref(task.problem_class),
+        problem_artifact_table=get_artifact_table(task.problem_class),
         solution_class=get_rst_class_ref(task.solution_class),
         solution_artifact_table=get_artifact_table(task.solution_class),
-        storage_link=get_link("browse", os.path.join(BUCKET_BROWSER_URL, task.task_id)),
+        storage_url=os.path.join(BUCKET_BROWSER_URL, task.task_id),
         longer_description=longer_description,
     )
 

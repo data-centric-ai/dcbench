@@ -37,76 +37,29 @@ and explore the data-centric problems in the benchmark:
 import dcbench
 dcbench.tasks
 ```
+To learn more, follow the 'walkthrough' in our docs. 
+
 
 ## 💡 What is dcbench?
-This benchmark evaluates data-centric aspects of improving the quality of machine learning workflows.
+This benchmark evaluates the steps in your machine learning workflow beyond model training and tuning. This includes feature cleaning, slice discovery, and coreset selection. We call these “data-centric” tasks because they're focused on exploring and manipulating data – not training models. ``dcbench`` supports a growing list of them:
 
-It features a growing list of data-centric *tasks*:
+* [Minimal Data Selection](https://dcbench.readthedocs.io/en/latest/tasks.html#minimal-data-selection)
+* [Slice Discovery](https://dcbench.readthedocs.io/en/latest/tasks.html#slice-discovery)
+* [Minimal Feature Cleaning](https://dcbench.readthedocs.io/en/latest/tasks.html#minimal-feature-cleaning)
 
-* Minimal data cleaning (`miniclean`)
-* Label Correction (`labelfix`)
-* Slice Discovery (`errmod`)
-* Minimal training dataset selection (`minitrain`)
 
-Each task features a a collection of *problems*. *What is a problem?* A useful analogy is: chess problems are to a full chess game as *problems* are to the full data-centric ML lifecycle. For example, many machine-learning workflows include a label correction phase where labels are audited and fixed. Our benchmark includes a collection of label cleaning *problems* each with a different dataset and set of sullied labels to be cleaned. 
-## ⚙️ How does it work?
-### `Problem`
+``dcbench`` includes tasks that look very different from one another: the inputs and
+outputs of the slice discovery task are not the same as those of the
+minimal data cleaning task. However, we think it important that
+researchers and practitioners be able to run evaluations on data-centric
+tasks across the ML lifecycle without having to learn a bunch of
+different APIs or rewrite evaluation scripts.
 
-The benchmark supports a diverse set of problems that may look very different from one another. For example, a slice discovery problem has different inputs and outputs than a data cleaning problem. To deal with this, we group problems by *task.*  In `dcbench`, each task is represented by a subclass of `Problem` (*e.g.* `SliceDiscoveryProblem`, `MinicleanProblem`). The problems themselves are represented by instances of these subclasses. 
+So, ``dcbench`` is designed to be a common home for these diverse, but
+related, tasks. In ``dcbench`` all of these tasks are structured in a
+similar manner and they are supported by a common Python API that makes
+it easy to download data, run evaluations, and compare methods.
 
-We can get a list all of the problem classes  in `dcbench` with:
-
-```python
-import dcbench
-dcbench.tasks
-
-# OUT: 
-[<class 'dcbench.tasks.miniclean.problem.MinicleanProblem'>, <class 'dcbench.tasks.slice.SliceDiscoveryProblem'>]
-```
-
-`dcbench` includes a set of problems for each task. We can list them with: 
-
-```python
-from dcbench import SliceDiscoveryProblem
-SliceDiscoveryProblem.instances
-
-# Out: TODO, get the actual dataframe output here 
-dataframe
-```
-
-We can get one of these problems with 
-
-```python
-problem = SliceDiscoveryProblem.instances[0]
-```
-
-### `Artifact`
-
-Each *problem* is made up of a set of artifacts: a dataset with labels to clean, a dataset and a model to perform error analysis on. In `dcbench` , these artifacts are represented by instances of `Artifact`. We can think of each `Problem` object as a container for `Artifact` objects. 
-
-```python
-problem.artifacts
-
-# Out: 
-{
-	"dataset": CSVArtifact()
-}
-
-artifact: CSVArtifact = problem["dataset"]
-```
-
-Note that `Artifact` objects don't actually hold their underlying data in memory. Instead, they hold pointers to where the `Artifact` lives in [dcbench cloud storage](https://console.cloud.google.com/storage/browser/dcbench?authuser=1&project=hai-gcp-fine-grained&pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false) and, if it's been downloaded,  where it lives locally on disk. This makes the `Problem` objects very lightweight.  
-
-**Downloading to disk.** By default, `dcbench` downloads artifacts to `~/.dcbench/artifacts` but this can be configured in the dcbench settings TODO: add support for configuration. To download an `Artifact`  via the Python API, use `artifact.download()`. You can also download all the artifacts in a problem with `problem.download()`.
-
-**Loading into memory.** `dcbench` includes loading functionality for each artifact type. To load an artifact into memory you can use `artifact.load()` . Note that this will also download the artifact if it hasn't yet been downloaded. 
-
-Finally,  we should point out that `problem` is a Python mapping, so we can index it directly to load artifacts.  
-
-```python
-# this is equivalent to problem.artifacts["dataset"].load()
-df: pd.DataFrame = problem["dataset"] 
-```
 
 ## ✉️ About
 `dcbench` is being developed alongside the data-centric-ai benchmark. Reach out to Bojan Karlaš (karlasb [at] inf [dot] ethz [dot] ch) and Sabri Eyuboglu (eyuboglu [at] stanford [dot] edu if you would like to get involved or contribute!)
