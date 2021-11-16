@@ -10,28 +10,25 @@ from dcbench.common.solution import Result, Solution
 from .common import Preprocessor
 
 
-class MiniCleanSolution(Solution):
+class BudgetcleanSolution(Solution):
     artifact_specs: Mapping[str, ArtifactSpec] = {
         "train_ids": ArtifactSpec(artifact_type=CSVArtifact, description="")
     }
 
 
-class MinicleanProblem(Problem):
+class BudgetcleanProblem(Problem):
 
     artifact_specs: Mapping[str, ArtifactSpec] = {
-        "X_train_dirty_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "X_train_dirty_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "X_train_clean_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "X_train_clean_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "y_train_a": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "y_train_b": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_train_dirty": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_train_clean": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "y_train": ArtifactSpec(artifact_type=CSVArtifact, description=""),
         "X_val": ArtifactSpec(artifact_type=CSVArtifact, description=""),
         "y_val": ArtifactSpec(artifact_type=CSVArtifact, description=""),
         "X_test": ArtifactSpec(artifact_type=CSVArtifact, description=""),
         "y_test": ArtifactSpec(artifact_type=CSVArtifact, description=""),
     }
 
-    task_id: str = "miniclean"
+    task_id: str = "budgetclean"
 
     @classmethod
     def list(cls):

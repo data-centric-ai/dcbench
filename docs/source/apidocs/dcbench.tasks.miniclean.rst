@@ -1,21 +1,21 @@
-dcbench.tasks.miniclean package
+dcbench.tasks.budgetclean package
 ===============================
 
 Submodules
 ----------
 
-dcbench.tasks.miniclean.common module
+dcbench.tasks.budgetclean.common module
 -------------------------------------
 
-.. automodule:: dcbench.tasks.miniclean.common
+.. automodule:: dcbench.tasks.budgetclean.common
    :members:
    :undoc-members:
    :show-inheritance:
 
-dcbench.tasks.miniclean.problem module
+dcbench.tasks.budgetclean.problem module
 --------------------------------------
 
-.. automodule:: dcbench.tasks.miniclean.problem
+.. automodule:: dcbench.tasks.budgetclean.problem
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ dcbench.tasks.miniclean.problem module
 Module contents
 ---------------
 
-.. automodule:: dcbench.tasks.miniclean
+.. automodule:: dcbench.tasks.budgetclean
    :members:
    :undoc-members:
    :show-inheritance:

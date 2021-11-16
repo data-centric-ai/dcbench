@@ -1,1 +1,1 @@
-TODO: Provide more details on how to run miniclean evaluation. 
+TODO: Provide more details on how to run budgetclean evaluation. 

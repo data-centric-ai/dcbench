@@ -86,7 +86,7 @@ name             type                                description
 TODO: Provide more details on how to run slice discovery evaluation. 
 
 
-.. _miniclean:
+.. _budgetclean:
 
 Minimal Feature Cleaning
 --------------------------------------------
@@ -94,16 +94,16 @@ Minimal Feature Cleaning
 .. sidebar::
     Task Details
     
-    :Task ID:      ``miniclean``
+    :Task ID:      ``budgetclean``
     :Problems:     8
 
 When it comes to data preparation, data cleaning is often an essential yet quite costly task. If we are given a fixed cleaning budget, the challenge is to find the training data examples that would would bring the biggest positive impact on model performance if we were to clean them.
 
-**Classes**: :class:`dcbench.MinicleanProblem` :class:`dcbench.MiniCleanSolution`
+**Classes**: :class:`dcbench.BudgetcleanProblem` :class:`dcbench.BudgetcleanSolution`
 
 .. admonition:: Cloud Storage
 
-    We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <https://console.cloud.google.com/storage/browser/dcbench/miniclean>`_. 
+    We recommend downloading Artifacts through the Python API, but you can also explore the Artifacts on the `Google Cloud Console <https://console.cloud.google.com/storage/browser/dcbench/budgetclean>`_. 
 
 
 Problem Artifacts
@@ -131,4 +131,4 @@ name           type                          description
 ``train_ids``  :class:`dcbench.CSVArtifact`
 =============  ============================  =============
 
-TODO: Provide more details on how to run miniclean evaluation. 
+TODO: Provide more details on how to run budgetclean evaluation. 

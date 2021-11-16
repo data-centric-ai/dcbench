@@ -5,7 +5,7 @@ This benchmark evaluates the steps in your machine learning workflow beyond mode
 
 * :any:`minidata`: Find the smallest subset of training data on which a fixed model architecture achieves accuracy above a threshold. 
 * :any:`slice_discovery`: Identify subgroups on which a model underperforms.
-* :any:`miniclean`: Given a fixed budget, clean input features of training data to improve model performance.  
+* :any:`budgetclean`: Given a fixed budget, clean input features of training data to improve model performance.  
 
 
 ``dcbench`` includes tasks that look very different from one another: the inputs and

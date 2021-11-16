@@ -131,11 +131,11 @@ class Artifact(ABC):
         pass
 
     @abstractmethod
-    def save(self, data: any) -> None:
+    def save(self, data: Any) -> None:
         pass
 
     @classmethod
-    def from_data(cls, data: any, artifact_id: str = None):
+    def from_data(cls, data: Any, artifact_id: str = None):
         if artifact_id is None:
             artifact_id = uuid.uuid4().hex
         # TODO ():At some point we should probably enforce that ids are unique
@@ -197,7 +197,7 @@ class YAMLArtifact(Artifact):
         self._ensure_downloaded()
         return yaml.load(open(self.local_path), yaml=yaml.FullLoader)
 
-    def save(self, data: any) -> None:
+    def save(self, data: Any) -> None:
         return yaml.dump(data, open(self.local_path))
 
 
@@ -276,6 +276,7 @@ class ArtifactContainer(ABC, Mapping):
 
     artifact_specs: Mapping[str, ArtifactSpec]
     task_id: str = "none"
+    container_type: str
 
     def __init__(
         self,
@@ -376,7 +377,7 @@ class ArtifactContainer(ABC, Mapping):
                     f"Passed an artifact of type {type(artifact)} to {cls.__name__}"
                     f" for the artifact named '{name}'. The specification for"
                     f" {cls.__name__} expects an Artifact of type"
-                    f" {cls.artifact_spec[name].artifact_type}."
+                    f" {cls.artifact_specs[name].artifact_type}."
                 )
 
     @staticmethod

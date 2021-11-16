@@ -12,8 +12,8 @@ from .common.artifact import (
     YAMLArtifact,
 )
 from .config import config
-from .tasks.miniclean import MinicleanProblem
-from .tasks.miniclean import task as miniclean
+from .tasks.budgetclean import BudgetcleanProblem
+from .tasks.budgetclean import task as budgetclean
 from .tasks.minidata import MiniDataProblem
 from .tasks.minidata import task as minidata
 from .tasks.slice_discovery import SliceDiscoveryProblem
@@ -22,12 +22,12 @@ from .version import __version__
 
 __all__ = [
     "minidata",
-    "miniclean",
+    "budgetclean",
     "slice_discovery",
     "Artifact",
     "Problem",
     "Solution",
-    "MinicleanProblem",
+    "BudgetcleanProblem",
     "MiniDataProblem",
     "SliceDiscoveryProblem",
     "Task",
@@ -43,5 +43,5 @@ __all__ = [
 tasks = [
     minidata,
     slice_discovery,
-    miniclean,
+    budgetclean,
 ]

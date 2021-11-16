@@ -7,7 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   dcbench.tasks.miniclean
+   dcbench.tasks.budgetclean
    dcbench.tasks.slice
 
 Module contents
