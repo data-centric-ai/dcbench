@@ -1,18 +1,20 @@
 from typing import Any, Mapping
 
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
+import warnings
+from sklearn.linear_model import LogisticRegression
+from autosklearn.experimental.askl2 import AutoSklearn2Classifier
+
 
 from dcbench.common.artifact import ArtifactSpec, CSVArtifact
-from dcbench.common.problem import Problem
-from dcbench.common.solution import Result, Solution
+from dcbench.common import Problem, Result, Solution, Task
 
 from .common import Preprocessor
 
 
 class BudgetcleanSolution(Solution):
     artifact_specs: Mapping[str, ArtifactSpec] = {
-        "train_ids": ArtifactSpec(artifact_type=CSVArtifact, description="")
+        "idx_selected": ArtifactSpec(artifact_type=CSVArtifact, description="")
     }
 
 
@@ -39,95 +41,105 @@ class BudgetcleanProblem(Problem):
     def from_id(cls, scenario_id: str):
         pass
 
-    def solve(self, **kwargs: Any) -> Solution:
+    def solve(self, idx_selected: Any, **kwargs: Any) -> Solution:
 
-        if len(kwargs) not in [1, 2]:
-            raise ValueError("The solution can be built from either 1 or 2 objects.")
+        # Construct the solution object as a Pandas DataFrame.
+        idx_selected_df = None
+        if isinstance(idx_selected, pd.DataFrame):
+            idx_selected_df = pd.DataFrame({"idx_selected": idx_selected.iloc[:, 0].values}).astype("bool")
+        elif isinstance(idx_selected, list):
+            idx_selected_df = pd.DataFrame({"idx_selected": idx_selected}).astype("bool")
+        else:
+            raise ValueError("The provided idx_selected object must be either a list or a DataFrame.")
 
-        if not all(isinstance(x, pd.DataFrame) for x in kwargs.values()):
-            raise ValueError("The solution objects must be Pandas DataFrame instances.")
+        # Check if the content of the solution object is valid.
+        X_train_dirty = self["X_train_dirty"]
+        if len(X_train_dirty) != len(idx_selected_df):
+            raise ValueError("The number of elements of the provided solution object must be the same as for the "
+                             "training dataset. (expected: %d, found: %d)" % (len(X_train_dirty), len(idx_selected_df)))
 
-        if len(self.artifacts["X_train_dirty_a"].load()) != len(
-            kwargs["X_train_selection_a"]
-        ):
-            raise ValueError(
-                "The first data frame must have the same size as X_train_dirty_a."
-            )
-        if len(kwargs) == 2 and len(self.artifacts["X_train_dirty_b"].load()) != len(
-            kwargs["X_train_selection_b"]
-        ):
-            raise ValueError(
-                "The second data frame must have the same size as X_train_dirty_a."
-            )
+        num_selected = idx_selected_df["idx_selected"].sum()
+        budget = int(self.attributes["budget"] * len(X_train_dirty))
+        if num_selected > budget:
+            raise ValueError("The number of selected data examples is higher than the allowed budget. "
+                             "(expected: %d, found: %d)" % (budget, num_selected))
+        if num_selected < budget:
+            warnings.warn("The number of selected data examples is below the allowed budget. "
+                          "(expected: %d, found: %d)" % (budget, num_selected))
 
-        if not all(len(item.columns) == 1 for item in kwargs.values()):
-            raise ValueError(
-                "All provided solution objects must be made up of a single column."
-            )
-        if not all(item.dtypes[0] == bool for item in kwargs.values()):
-            raise ValueError("All provided solution objects must have boolean columns.")
-
-        return Solution(self, objects=kwargs)
+        # Construct and return a solution object.
+        return BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
 
     def evaluate(self, solution: Solution) -> "Result":
 
         # Load scenario artifacts.
-        a = self.artifacts.load()
+        X_train_dirty = self["X_train_dirty"]
+        X_train_clean = self["X_train_clean"]
+        y_train = self["y_train"]
+        X_val = self["X_val"]
+        y_val = self["y_val"]
+        X_test = self["X_test"]
+        y_test = self["y_test"]
+
+        # Replace lists with None values.
+        def clearlists(x):
+            if isinstance(x, list):
+                return None
+            return x
+        X_train_dirty = X_train_dirty.applymap(clearlists)
 
         # Load solution artifacts.
-        I_solution_a = solution.artifacts.X_train_selection_a.load()
-        I_solution_b = (
-            solution.artifacts.X_train_selection_b.load()
-            if len(solution.artifacts) > 1
-            else None
-        )
+        idx_selected = solution["idx_selected"]["idx_selected"]
 
         # Determine the solution training datasets.
-        X_train_solution_a = a.X_train_dirty_a.mask(I_solution_a, a.X_train_clean_a)
-        X_train_solution_b = (
-            a.X_train_dirty_b.mask(I_solution_b, a.X_train_clean_b)
-            if I_solution_b is not None
-            else None
-        )
+        X_train_solution = X_train_dirty.mask(idx_selected, X_train_clean)
 
         # Fit data preprocessor.
         preprocessor = Preprocessor()
-        X_train_dirty = pd.concat(
-            [a.X_train_dirty_a, a.X_train_dirty_b], ignore_index=True, sort=False
-        )
-        y_train = pd.concat([a.y_train_a, a.y_train_b], ignore_index=True, sort=False)
         preprocessor.fit(X_train_dirty, y_train)
 
         # Preprocess the data.
-        X_train_solution_a, y_train_a = preprocessor.transform(
-            X_train_solution_a, a.y_train_a
-        )
-        if X_train_solution_b is not None:
-            X_train_solution_b, y_train_b = preprocessor.transform(
-                X_train_solution_b, a.y_train_b
-            )
-        X_val, y_val = preprocessor.transform(a.X_val, a.y_val)
-        if a.X_test is not None and a.y_test is not None:
-            X_test, y_test = preprocessor.transform(a.X_test, a.y_test)
+        X_train_solution, y_train = preprocessor.transform(X_train_solution, y_train)
+        X_train_dirty = preprocessor.transform(X_train_dirty)
+        X_train_clean = preprocessor.transform(X_train_clean)
+        X_val, y_val = preprocessor.transform(X_val, y_val)
+        X_test, y_test = preprocessor.transform(X_test, y_test)
 
-        # Train the model.
-        model_a = KNeighborsClassifier(n_neighbors=3).fit(X_train_solution_a, y_train_a)
-        if X_train_solution_b is not None:
-            model_b = KNeighborsClassifier(n_neighbors=3).fit(
-                X_train_solution_b, y_train_b
-            )
+        # Train the solution, clean and dirty models.
+        if self.attributes["model"] == "logreg":
+            model_solution = LogisticRegression().fit(X_train_solution, y_train)
+            model_dirty = LogisticRegression().fit(X_train_dirty, y_train)
+            model_clean = LogisticRegression().fit(X_train_clean, y_train)
+        elif self.attributes["model"] == "automl":
+            model_solution = AutoSklearn2Classifier().fit(X_train_solution, y_train)
+            model_dirty = AutoSklearn2Classifier().fit(X_train_dirty, y_train)
+            model_clean = AutoSklearn2Classifier().fit(X_train_clean, y_train)
+        else:
+            raise ValueError("Unknown model attribute '%s'." % self.attributes["model"])
 
         # Evaluate the model.
         result = {}
-        result["acc_a_val"] = model_a.score(X_val, y_val)
-        if X_train_solution_b is not None:
-            result["acc_b_val"] = model_b.score(X_val, y_val)
-        if a.X_test is not None and a.y_test is not None:
-            result["acc_a_test"] = model_a.score(X_test, y_test)
-        if (
-            X_train_solution_b is not None
-            and a.X_test is not None
-            and a.y_test is not None
-        ):
-            result["acc_b_test"] = model_b.score(X_test, y_test)
+        acc_val_solution = model_solution.score(X_val, y_val)
+        acc_val_dirty = model_dirty.score(X_val, y_val)
+        acc_val_clean = model_clean.score(X_val, y_val)
+        result["acc_val_gapclosed"] = (acc_val_solution - acc_val_dirty) / (acc_val_clean - acc_val_dirty)
+        acc_test_solution = model_solution.score(X_test, y_test)
+        acc_test_dirty = model_dirty.score(X_test, y_test)
+        acc_test_clean = model_clean.score(X_test, y_test)
+        result["acc_test_gapclosed"] = (acc_test_solution - acc_test_dirty) / (acc_test_clean - acc_test_dirty)
+
         return result
+
+
+task = Task(
+    task_id="budgetclean",
+    name="Budget Clean",
+    summary=(
+        "When it comes to data preparation, data cleaning is often an essential yet quite "
+        "costly task. If we are given a fixed cleaning budget, the challenge is to find the "
+        "training data examples that would would bring the biggest positive impact on model "
+        "performance if we were to clean them."
+    ),
+    problem_class=BudgetcleanProblem,
+    solution_class=BudgetcleanSolution,
+)

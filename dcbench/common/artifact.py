@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import tempfile
@@ -183,7 +184,18 @@ class CSVArtifact(Artifact):
 
     def load(self) -> pd.DataFrame:
         self._ensure_downloaded()
-        return pd.read_csv(self.local_path)
+        data = pd.read_csv(self.local_path, index_col=0)
+        
+        def parselists(x):
+            if isinstance(x, str):
+                try:
+                    return json.loads(x)
+                except ValueError:
+                    return x
+            else:
+                return x
+
+        return data.applymap(parselists)
 
     def save(self, data: pd.DataFrame) -> None:
         return data.to_csv(self.local_path)

@@ -44,6 +44,7 @@ REQUIRED = [
     "tqdm>=4.49.0",
     "scikit-learn",
     "meerkat-ml[dev,vision,ml] @ git+https://github.com/robustness-gym/meerkat@dev",
+    "auto-sklearn",
     # "torchvision>=0.9.0",
     # "wandb",
     # "ray[default]",
