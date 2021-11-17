@@ -155,4 +155,5 @@ task = Task(
     ),
     problem_class=BudgetcleanProblem,
     solution_class=BudgetcleanSolution,
+    baselines=None
 )

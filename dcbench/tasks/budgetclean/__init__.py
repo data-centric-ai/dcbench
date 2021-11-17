@@ -1,8 +1,10 @@
 # flake8: noqa
 
 from ...common import Task
+from ...common.bundle import RelationalBundle
 from .common import Preprocessor
 from .problem import BudgetcleanProblem, BudgetcleanSolution
+from .baselines import random_clean, cp_clean
 
 # TODO: consider changing this name, word minimal doesn't feel appropriate since
 # the budget is fixed
@@ -17,4 +19,8 @@ task = Task(
     ),
     problem_class=BudgetcleanProblem,
     solution_class=BudgetcleanSolution,
+    baselines=RelationalBundle(
+        items={"random_clean": random_clean, "cp_clean": cp_clean},
+        attributes=["summary"]
+    )
 )

@@ -12,6 +12,7 @@ from tqdm import tqdm
 from dcbench.config import config
 
 from .artifact import ArtifactContainer
+from .bundle import RelationalBundle
 
 storage = LazyLoader("google.cloud.storage")
 
@@ -24,6 +25,7 @@ class Task:
     summary: str
     problem_class: type
     solution_class: type
+    baselines: RelationalBundle = RelationalBundle()
 
     @property
     def problems_path(self):

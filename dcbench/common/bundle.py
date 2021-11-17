@@ -7,7 +7,7 @@ V = TypeVar("V")
 
 
 class Bundle(Generic[V], Mapping[str, Union[V, "Bundle"]]):
-    def __init__(self, items: Mapping[str, V], **kwargs) -> None:
+    def __init__(self, items: Mapping[str, V] = {}, **kwargs) -> None:
         self._items: Mapping[str, Optional[V]] = items
         aux_items: Dict[str, Dict[str, Any]] = dict()
         for k, v in items.items():
@@ -54,7 +54,7 @@ def get_value(obj: Any, key: str) -> Any:
 
 
 class RelationalBundle(Generic[V], Bundle[V]):
-    def __init__(self, items: Mapping[str, V], attributes: List[str], **kwargs) -> None:
+    def __init__(self, items: Mapping[str, V] = {}, attributes: List[str] = [], **kwargs) -> None:
 
         self._dataframe = DataFrame(columns=attributes, index=items.keys())
         for k, v in items.items():

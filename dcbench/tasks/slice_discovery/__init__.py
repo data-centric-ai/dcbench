@@ -76,4 +76,5 @@ task = Task(
     ),
     problem_class=SliceDiscoveryProblem,
     solution_class=SliceDiscoverySolution,
+    baselines=None
 )
