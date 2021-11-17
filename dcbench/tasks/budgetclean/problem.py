@@ -1,13 +1,11 @@
+import warnings
 from typing import Any, Mapping
 
 import pandas as pd
-import warnings
 from sklearn.linear_model import LogisticRegression
-from autosklearn.experimental.askl2 import AutoSklearn2Classifier
 
-
-from dcbench.common.artifact import ArtifactSpec, CSVArtifact
 from dcbench.common import Problem, Result, Solution, Task
+from dcbench.common.artifact import ArtifactSpec, CSVArtifact
 
 from .common import Preprocessor
 
@@ -21,26 +19,41 @@ class BudgetcleanSolution(Solution):
 class BudgetcleanProblem(Problem):
 
     artifact_specs: Mapping[str, ArtifactSpec] = {
-        "X_train_dirty": ArtifactSpec(artifact_type=CSVArtifact,
-                                      description="Features of the dirty training dataset which we need to clean. "
-                                                  "Each dirty cell contains an embedded list of clean "
-                                                  "candidate values."),
-        "X_train_clean": ArtifactSpec(artifact_type=CSVArtifact,
-                                      description="Features of the clean training dataset where each dirty value "
-                                                  "from the dirty dataset is replaced with the correct "
-                                                  "clean candidate."),
-        "y_train": ArtifactSpec(artifact_type=CSVArtifact,
-                                description="Labels of the training dataset."),
-        "X_val": ArtifactSpec(artifact_type=CSVArtifact,
-                              description="Feature of the validtion dataset which can be used to guide "
-                                          "the cleaning optimization process."),
-        "y_val": ArtifactSpec(artifact_type=CSVArtifact,
-                              description="Labels of the validation dataset."),
-        "X_test": ArtifactSpec(artifact_type=CSVArtifact,
-                               description="Features of the test dataset used to produce the final evaluation "
-                                           "score of the model."),
-        "y_test": ArtifactSpec(artifact_type=CSVArtifact,
-                               description="Labels of the test dataset."),
+        "X_train_dirty": ArtifactSpec(
+            artifact_type=CSVArtifact,
+            description=(
+                "Features of the dirty training dataset which we need to clean. "
+                "Each dirty cell contains an embedded list of clean "
+                "candidate values.",
+            ),
+        ),
+        "X_train_clean": ArtifactSpec(
+            artifact_type=CSVArtifact,
+            description="Features of the clean training dataset where each dirty value "
+            "from the dirty dataset is replaced with the correct "
+            "clean candidate.",
+        ),
+        "y_train": ArtifactSpec(
+            artifact_type=CSVArtifact, description="Labels of the training dataset."
+        ),
+        "X_val": ArtifactSpec(
+            artifact_type=CSVArtifact,
+            description="Feature of the validtion dataset which can be used to guide "
+            "the cleaning optimization process.",
+        ),
+        "y_val": ArtifactSpec(
+            artifact_type=CSVArtifact, description="Labels of the validation dataset."
+        ),
+        "X_test": ArtifactSpec(
+            artifact_type=CSVArtifact,
+            description=(
+                "Features of the test dataset used to produce the final evaluation "
+                "score of the model.",
+            ),
+        ),
+        "y_test": ArtifactSpec(
+            artifact_type=CSVArtifact, description="Labels of the test dataset."
+        ),
     }
 
     task_id: str = "budgetclean"
@@ -59,26 +72,40 @@ class BudgetcleanProblem(Problem):
         # Construct the solution object as a Pandas DataFrame.
         idx_selected_df = None
         if isinstance(idx_selected, pd.DataFrame):
-            idx_selected_df = pd.DataFrame({"idx_selected": idx_selected.iloc[:, 0].values}).astype("bool")
+            idx_selected_df = pd.DataFrame(
+                {"idx_selected": idx_selected.iloc[:, 0].values}
+            ).astype("bool")
         elif isinstance(idx_selected, list):
-            idx_selected_df = pd.DataFrame({"idx_selected": idx_selected}).astype("bool")
+            idx_selected_df = pd.DataFrame({"idx_selected": idx_selected}).astype(
+                "bool"
+            )
         else:
-            raise ValueError("The provided idx_selected object must be either a list or a DataFrame.")
+            raise ValueError(
+                "The provided idx_selected object must be either a list or a DataFrame."
+            )
 
         # Check if the content of the solution object is valid.
         X_train_dirty = self["X_train_dirty"]
         if len(X_train_dirty) != len(idx_selected_df):
-            raise ValueError("The number of elements of the provided solution object must be the same as for the "
-                             "training dataset. (expected: %d, found: %d)" % (len(X_train_dirty), len(idx_selected_df)))
+            raise ValueError(
+                "The number of elements of the provided solution object must be the "
+                "same as for the training dataset. (expected: %d, found: %d)"
+                % (len(X_train_dirty), len(idx_selected_df))
+            )
 
         num_selected = idx_selected_df["idx_selected"].sum()
         budget = int(self.attributes["budget"] * len(X_train_dirty))
         if num_selected > budget:
-            raise ValueError("The number of selected data examples is higher than the allowed budget. "
-                             "(expected: %d, found: %d)" % (budget, num_selected))
+            raise ValueError(
+                "The number of selected data examples is  "
+                "higher than the allowed budget. "
+                "(expected: %d, found: %d)" % (budget, num_selected)
+            )
         if num_selected < budget:
-            warnings.warn("The number of selected data examples is below the allowed budget. "
-                          "(expected: %d, found: %d)" % (budget, num_selected))
+            warnings.warn(
+                "The number of selected data examples is below the allowed budget. "
+                "(expected: %d, found: %d)" % (budget, num_selected)
+            )
 
         # Construct and return a solution object.
         return BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
@@ -99,6 +126,7 @@ class BudgetcleanProblem(Problem):
             if isinstance(x, list):
                 return None
             return x
+
         X_train_dirty = X_train_dirty.applymap(clearlists)
 
         # Load solution artifacts.
@@ -123,10 +151,6 @@ class BudgetcleanProblem(Problem):
             model_solution = LogisticRegression().fit(X_train_solution, y_train)
             model_dirty = LogisticRegression().fit(X_train_dirty, y_train)
             model_clean = LogisticRegression().fit(X_train_clean, y_train)
-        elif self.attributes["model"] == "automl":
-            model_solution = AutoSklearn2Classifier().fit(X_train_solution, y_train)
-            model_dirty = AutoSklearn2Classifier().fit(X_train_dirty, y_train)
-            model_clean = AutoSklearn2Classifier().fit(X_train_clean, y_train)
         else:
             raise ValueError("Unknown model attribute '%s'." % self.attributes["model"])
 
@@ -135,11 +159,15 @@ class BudgetcleanProblem(Problem):
         acc_val_solution = model_solution.score(X_val, y_val)
         acc_val_dirty = model_dirty.score(X_val, y_val)
         acc_val_clean = model_clean.score(X_val, y_val)
-        result["acc_val_gapclosed"] = (acc_val_solution - acc_val_dirty) / (acc_val_clean - acc_val_dirty)
+        result["acc_val_gapclosed"] = (acc_val_solution - acc_val_dirty) / (
+            acc_val_clean - acc_val_dirty
+        )
         acc_test_solution = model_solution.score(X_test, y_test)
         acc_test_dirty = model_dirty.score(X_test, y_test)
         acc_test_clean = model_clean.score(X_test, y_test)
-        result["acc_test_gapclosed"] = (acc_test_solution - acc_test_dirty) / (acc_test_clean - acc_test_dirty)
+        result["acc_test_gapclosed"] = (acc_test_solution - acc_test_dirty) / (
+            acc_test_clean - acc_test_dirty
+        )
 
         return result
 
@@ -148,10 +176,10 @@ task = Task(
     task_id="budgetclean",
     name="Budget Clean",
     summary=(
-        "When it comes to data preparation, data cleaning is often an essential yet quite "
-        "costly task. If we are given a fixed cleaning budget, the challenge is to find the "
-        "training data examples that would would bring the biggest positive impact on model "
-        "performance if we were to clean them."
+        "When it comes to data preparation, data cleaning is often an essential yet "
+        "quite costly task. If we are given a fixed cleaning budget, the challenge is "
+        "to find the training data examples that would would bring the biggest "
+        "positive impact on model performance if we were to clean them."
     ),
     problem_class=BudgetcleanProblem,
     solution_class=BudgetcleanSolution,

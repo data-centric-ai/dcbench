@@ -58,7 +58,7 @@ class Task:
         for container in tqdm(self.problems.values()):
             assert isinstance(container, self.problem_class)
             if include_artifacts:
-                container.upload(bucket=bucket)
+                container.upload(bucket=bucket, force=True)
         blob = bucket.blob(self.problems_path)
         blob.upload_from_filename(self.local_problems_path)
 
