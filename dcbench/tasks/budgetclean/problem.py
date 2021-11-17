@@ -21,13 +21,26 @@ class BudgetcleanSolution(Solution):
 class BudgetcleanProblem(Problem):
 
     artifact_specs: Mapping[str, ArtifactSpec] = {
-        "X_train_dirty": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "X_train_clean": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "y_train": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "X_val": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "y_val": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "X_test": ArtifactSpec(artifact_type=CSVArtifact, description=""),
-        "y_test": ArtifactSpec(artifact_type=CSVArtifact, description=""),
+        "X_train_dirty": ArtifactSpec(artifact_type=CSVArtifact,
+                                      description="Features of the dirty training dataset which we need to clean. "
+                                                  "Each dirty cell contains an embedded list of clean "
+                                                  "candidate values."),
+        "X_train_clean": ArtifactSpec(artifact_type=CSVArtifact,
+                                      description="Features of the clean training dataset where each dirty value "
+                                                  "from the dirty dataset is replaced with the correct "
+                                                  "clean candidate."),
+        "y_train": ArtifactSpec(artifact_type=CSVArtifact,
+                                description="Labels of the training dataset."),
+        "X_val": ArtifactSpec(artifact_type=CSVArtifact,
+                              description="Feature of the validtion dataset which can be used to guide "
+                                          "the cleaning optimization process."),
+        "y_val": ArtifactSpec(artifact_type=CSVArtifact,
+                              description="Labels of the validation dataset."),
+        "X_test": ArtifactSpec(artifact_type=CSVArtifact,
+                               description="Features of the test dataset used to produce the final evaluation "
+                                           "score of the model."),
+        "y_test": ArtifactSpec(artifact_type=CSVArtifact,
+                               description="Labels of the test dataset."),
     }
 
     task_id: str = "budgetclean"
