@@ -3,6 +3,7 @@ from typing import Any, Mapping
 
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 
 from dcbench.common import Problem, Result, Solution, Task
 from dcbench.common.artifact import ArtifactSpec, CSVArtifact
@@ -108,7 +109,11 @@ class BudgetcleanProblem(Problem):
             )
 
         # Construct and return a solution object.
-        return BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
+        solution = BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
+        solution.attributes["problem_id"] = self.container_id
+        for k, v in self.attributes.items():
+            solution.attributes[k] = v
+        return solution
 
     def evaluate(self, solution: Solution) -> "Result":
 
@@ -151,25 +156,31 @@ class BudgetcleanProblem(Problem):
             model_solution = LogisticRegression().fit(X_train_solution, y_train)
             model_dirty = LogisticRegression().fit(X_train_dirty, y_train)
             model_clean = LogisticRegression().fit(X_train_clean, y_train)
+        if self.attributes["model"] == "randomf":
+            model_solution = RandomForestClassifier().fit(X_train_solution, y_train)
+            model_dirty = RandomForestClassifier().fit(X_train_dirty, y_train)
+            model_clean = RandomForestClassifier().fit(X_train_clean, y_train)
         else:
             raise ValueError("Unknown model attribute '%s'." % self.attributes["model"])
 
         # Evaluate the model.
-        result = {}
+        result_dict = {}
         acc_val_solution = model_solution.score(X_val, y_val)
         acc_val_dirty = model_dirty.score(X_val, y_val)
         acc_val_clean = model_clean.score(X_val, y_val)
-        result["acc_val_gapclosed"] = (acc_val_solution - acc_val_dirty) / (
+        result_dict["acc_val_gapclosed"] = (acc_val_solution - acc_val_dirty) / (
             acc_val_clean - acc_val_dirty
         )
         acc_test_solution = model_solution.score(X_test, y_test)
         acc_test_dirty = model_dirty.score(X_test, y_test)
         acc_test_clean = model_clean.score(X_test, y_test)
-        result["acc_test_gapclosed"] = (acc_test_solution - acc_test_dirty) / (
+        result_dict["acc_test_gapclosed"] = (acc_test_solution - acc_test_dirty) / (
             acc_test_clean - acc_test_dirty
         )
 
-        return result
+        result_dict = {**result_dict, **solution.attributes}
+
+        return pd.Series(result_dict, name=solution.container_id)
 
 
 task = Task(
