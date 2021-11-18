@@ -74,6 +74,7 @@ def compute_metrics(slices: np.ndarray, pred_slices: np.ndarray) -> dict:
                     "precision": precision_score(
                         slices[:, slice_idx],
                         (pred_slice == pred_slice_idx).astype(int),
+                        zero_division=0
                     )
                     if no_nan_preds
                     else np.nan,

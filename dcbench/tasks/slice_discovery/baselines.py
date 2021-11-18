@@ -74,7 +74,7 @@ def domino_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
 
     mm = DominoMixture(
         n_components=25,
-        weight_y_log_likelihood=25,
+        weight_y_log_likelihood=10,
         init_params="error",
         covariance_type="diag",
     )
