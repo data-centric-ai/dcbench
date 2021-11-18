@@ -39,7 +39,7 @@ class SliceDiscoveryProblem(Problem):
         "slices": ArtifactSpec(
             artifact_type=DataPanelArtifact,
             description="A DataPanel of the ground truth slice labels with columns "
-            " `id`, `target`, and `probs.`",
+            " `id`, `slices`.",
         ),
         "activations": ArtifactSpec(
             artifact_type=DataPanelArtifact,
@@ -59,18 +59,14 @@ class SliceDiscoveryProblem(Problem):
 
     task_id: str = "slice_discovery"
 
-    @classmethod
-    def from_id(cls, scenario_id: str):
-        pass
-
-    def solve(self, pred_slices: mk.DataPanel) -> SliceDiscoverySolution:
-        if ("id" not in pred_slices) or ("pred_slices" not in pred_slices):
+    def solve(self, pred_slices_dp: mk.DataPanel) -> SliceDiscoverySolution:
+        if ("id" not in pred_slices_dp) or ("pred_slices_dp" not in pred_slices_dp):
             raise ValueError(
                 f"DataPanel passed to {self.__class__.__name__} must include columns "
                 ""
             )
         return SliceDiscoverySolution.from_artifacts(
-            artifacts={"pred_slices": pred_slices}
+            artifacts={"pred_slices_dp": pred_slices_dp}
         )
 
     def evaluate(self, solution: SliceDiscoverySolution) -> dict:

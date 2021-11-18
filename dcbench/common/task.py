@@ -4,28 +4,32 @@ from dataclasses import dataclass
 from typing import Sequence
 from urllib.request import urlretrieve
 
-import pandas as pd
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 from tqdm import tqdm
 
+from dcbench.common.table import RowMixin, Table
 from dcbench.config import config
 
 from .artifact import ArtifactContainer
-from .bundle import RelationalBundle
 
 storage = LazyLoader("google.cloud.storage")
 
 
 @dataclass
-class Task:
+class Task(RowMixin):
 
     task_id: str
     name: str
     summary: str
     problem_class: type
     solution_class: type
-    baselines: RelationalBundle = RelationalBundle()
+    baselines: Table = Table([])
+
+    def __post_init__(self):
+        super().__init__(
+            id=self.task_id, attributes={"name": self.name, "summary": self.summary}
+        )
 
     @property
     def problems_path(self):
@@ -73,21 +77,11 @@ class Task:
 
     @property
     @functools.lru_cache()
-    def problems_df(self):
-        return pd.DataFrame(
-            [
-                {"id": problem.container_id, **problem.attributes}
-                for problem in self.problems.values()
-            ]
-        )
-
-    @property
-    @functools.lru_cache()
     def problems(self):
         if not os.path.exists(self.local_problems_path):
             self.download_problems()
         problems = yaml.load(open(self.local_problems_path), Loader=yaml.FullLoader)
-        return {problem.container_id: problem for problem in problems}
+        return Table(problems)
 
     def __repr__(self):
         return f'Task(task_id="{self.task_id}", name="{self.name}")'

@@ -5,19 +5,19 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
-from dcbench.common import Problem, Result, Solution, Task
+from dcbench.common import Problem, Result, Solution
 from dcbench.common.artifact import ArtifactSpec, CSVArtifact
 
 from .common import Preprocessor
 
 
-class BudgetCleanSolution(Solution):
+class BudgetcleanSolution(Solution):
     artifact_specs: Mapping[str, ArtifactSpec] = {
         "idx_selected": ArtifactSpec(artifact_type=CSVArtifact, description="")
     }
 
 
-class BudgetCleanProblem(Problem):
+class BudgetcleanProblem(Problem):
 
     artifact_specs: Mapping[str, ArtifactSpec] = {
         "X_train_dirty": ArtifactSpec(
@@ -109,13 +109,13 @@ class BudgetCleanProblem(Problem):
             )
 
         # Construct and return a solution object.
-        solution = BudgetCleanSolution.from_artifacts({"idx_selected": idx_selected_df})
+        solution = BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
         solution.attributes["problem_id"] = self.container_id
         for k, v in self.attributes.items():
             solution.attributes[k] = v
         return solution
 
-    def evaluate(self, solution: BudgetCleanSolution) -> "Result":
+    def evaluate(self, solution: BudgetcleanSolution) -> "Result":
 
         # Load scenario artifacts.
         X_train_dirty = self["X_train_dirty"]
@@ -181,18 +181,3 @@ class BudgetCleanProblem(Problem):
         result_dict = {**result_dict, **solution.attributes}
 
         return pd.Series(result_dict, name=solution.container_id)
-
-
-task = Task(
-    task_id="budgetclean",
-    name="Budget Clean",
-    summary=(
-        "When it comes to data preparation, data cleaning is often an essential yet "
-        "quite costly task. If we are given a fixed cleaning budget, the challenge is "
-        "to find the training data examples that would would bring the biggest "
-        "positive impact on model performance if we were to clean them."
-    ),
-    problem_class=BudgetCleanProblem,
-    solution_class=BudgetCleanSolution,
-    baselines=None,
-)

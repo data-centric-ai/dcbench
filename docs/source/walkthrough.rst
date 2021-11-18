@@ -17,22 +17,22 @@ You can explore the supported tasks in the documentation (:any:`tasks`) or via t
    dcbench.tasks
 
 
-In the ``dcbench`` API, each task is represented by a :class:`dcbench.Task` object that can be accessed by *task_id* (*e.g.* ``dcbench.slice_discovery``). These task objects hold metadata about the task and hold pointers to task-specific :class:`dcbench.Problem` and :class:`dcbench.Solution` subclasses, discussed below.  
+In the ``dcbench`` API, each task is represented by a :class:`dcbench.Task` object that can be accessed by *task_id* (*e.g.* ``dcbench.tasks["slice_discovery"]``). These task objects hold metadata about the task and hold pointers to task-specific :class:`dcbench.Problem` and :class:`dcbench.Solution` subclasses, discussed below.  
 
 ``Problem``
 ~~~~~~~~~~~~
 Each task features a collection of *problems* (*i.e.* instances of the task). For example, the :any:`slice_discovery` task includes hundreds of problems across a number of different datasets. We can explore a task's problems in ``dcbench``:  
 
 .. ipython:: python
-
-   dcbench.slice_discovery.problems_df
+   slice_discovery = dcbench.tasks["slice_discovery"]
+   slice_discovery.problems
 
 All of a task's problems share the same structure and use the same evaluation scripts.
-This is specified via task-specific subclasses of :class:`dcbench.Problem` (*e.g.* :class:`~dcbench.SliceDiscoveryProblem`). The problems themselves are instances of these subclasses. We can access a  problem using it's id:
+This is specified via task-specific subclasses of :class:`dcbench.Problem` (*e.g.* :class:`~dcbench.SliceDiscoveryProblem`). The problems themselves are instances of these subclasses. We can access a problem using it's id:
 
 .. ipython:: python
 
-   problem = dcbench.slice_discovery.problems["p_72063"]
+   problem = slice_discovery.problems["p_72063"]
    problem
 
 
