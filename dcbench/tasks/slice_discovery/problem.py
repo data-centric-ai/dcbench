@@ -79,9 +79,7 @@ class SliceDiscoveryProblem(Problem):
 
         return SliceDiscoverySolution.from_artifacts(
             artifacts={"pred_slices": pred_slices_dp},
-            attributes={
-                "problem_id": self.id
-            }
+            attributes={"problem_id": self.id},
         )
 
     def evaluate(self, solution: SliceDiscoverySolution) -> dict:

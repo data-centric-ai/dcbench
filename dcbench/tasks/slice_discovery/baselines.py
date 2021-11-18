@@ -1,10 +1,9 @@
 import meerkat as mk
 import numpy as np
+from sklearn.decomposition import PCA
 
 from ...common.baseline import baseline
 from .problem import SliceDiscoveryProblem, SliceDiscoverySolution
-
-from sklearn.decomposition import PCA
 
 
 @baseline(
@@ -15,10 +14,10 @@ from sklearn.decomposition import PCA
     ),
 )
 def confusion_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
-    """A simple slice discovery method that returns a slice corresponding to each cell
-     of the confusion matrix. For example, for a binary prediction task, this sdm will
-     return 4 slices corresponding to true positives, false positives, true negatives
-     and false negatives.
+    """A simple slice discovery method that returns a slice corresponding to
+    each cell of the confusion matrix. For example, for a binary prediction
+    task, this sdm will return 4 slices corresponding to true positives, false
+    positives, true negatives and false negatives.
 
     Args:
         problem (SliceDiscoveryProblem): The slice discovery problem.

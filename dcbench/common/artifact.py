@@ -14,9 +14,9 @@ from urllib.request import urlopen, urlretrieve
 
 import meerkat as mk
 import pandas as pd
-from torch._C import Value
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
+from torch._C import Value
 
 import dcbench.constants as constants
 from dcbench.common.modeling import Model

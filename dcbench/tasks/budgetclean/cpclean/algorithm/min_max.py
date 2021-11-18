@@ -1,17 +1,21 @@
-import numpy as np
-import pandas as pd
 import time
 from collections import Counter
-from .utils import product, majority_vote
-from ..utils import Pool
 from functools import partial
 
+import numpy as np
+import pandas as pd
+
+from ..utils import Pool
+from .utils import majority_vote, product
+
+
 def min_max(mm, y, K):
-    """MinMax algorithm. Given a similarity matrix, return whether it is CP or not and the 
-       best scenario for each label.
-        mm (np.array): shape Nx2. the min and max similarity of each row. 
-        y (list): labels
-        K (int): KNN hyperparameter
+    """MinMax algorithm.
+
+    Given a similarity matrix, return whether it is CP or not and the
+    best scenario for each label.  mm (np.array): shape Nx2. the min and
+    max similarity of each row.  y (list): labels  K (int): KNN
+    hyperparameter
     """
     assert len(set(y)) == 2
     pred_set = set()
@@ -19,7 +23,7 @@ def min_max(mm, y, K):
 
     for c in [0, 1]:
         best_scenario = np.zeros(len(y))
-        mask = (y == c)
+        mask = y == c
 
         # set min max
         best_scenario[mask] = mm[:, 1][mask]
@@ -39,6 +43,7 @@ def min_max(mm, y, K):
     is_cc = len(pred_set) == 1
 
     return is_cc, best_scenarios, list(pred_set)
+
 
 def min_max_val(MM, y, K):
     q1_results = []
