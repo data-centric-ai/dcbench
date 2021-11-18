@@ -1,1 +1,0 @@
-TODO: Provide more details on how to run slice discovery evaluation. 

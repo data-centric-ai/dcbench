@@ -41,7 +41,7 @@ name           type                           description
 ``train_ids``  :class:`dcbench.YAMLArtifact`  A list of train example ids from the  ``id`` column of ``train_data``.
 =============  =============================  ======================================================================
 
-TODO: Provide more details on how to run miniddata evaluation.  
+
 
 
 .. _slice_discovery:
@@ -53,7 +53,7 @@ Slice Discovery
     Task Details
     
     :Task ID:      ``slice_discovery``
-    :Problems:     4
+    :Problems:     20
 
 Machine learnings models that achieve high overall accuracy often make  systematic erors on important subgroups (or *slices*) of data. When working   with high-dimensional inputs (*e.g.* images, audio) where data slices are   often unlabeled, identifying underperforming slices is challenging. In  this task, we'll develop automated slice discovery methods that mine  unstructured data for underperforming slices.
 
@@ -66,15 +66,17 @@ Machine learnings models that achieve high overall accuracy often make  systemat
 
 Problem Artifacts
 __________________
-================  ======================================  =======================================================================================
-name              type                                    description
-================  ======================================  =======================================================================================
-``predictions``   :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's predictions with columns `id`,`target`, and `probs.`
-``slices``        :class:`dcbench.DataPanelArtifact`      A DataPanel of the ground truth slice labels with columns  `id`, `target`, and `probs.`
-``activations``   :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's activations with columns `id`,`act`
-``model``         :class:`dcbench.ModelArtifact`          A trained PyTorch model to audit.
-``base_dataset``  :class:`dcbench.VisionDatasetArtifact`  A DataPanel representing the base dataset with columns `id` and `image`.
-================  ======================================  =======================================================================================
+====================  ======================================  ===============================================================================
+name                  type                                    description
+====================  ======================================  ===============================================================================
+``val_predictions``   :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's predictions with columns `id`,`target`, and `probs.`
+``test_predictions``  :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's predictions with columns `id`,`target`, and `probs.`
+``test_slices``       :class:`dcbench.DataPanelArtifact`      A DataPanel of the ground truth slice labels with columns  `id`, `slices`.
+``activations``       :class:`dcbench.DataPanelArtifact`      A DataPanel of the model's activations with columns `id`,`act`
+``model``             :class:`dcbench.ModelArtifact`          A trained PyTorch model to audit.
+``base_dataset``      :class:`dcbench.VisionDatasetArtifact`  A DataPanel representing the base dataset with columns `id` and `image`.
+``clip``              :class:`dcbench.DataPanelArtifact`      A DataPanel of the image embeddings from OpenAI's CLIP model
+====================  ======================================  ===============================================================================
 
 Solution Artifacts
 ____________________
@@ -84,12 +86,12 @@ name             type                                description
 ``pred_slices``  :class:`dcbench.DataPanelArtifact`  A DataPanel of predicted slice labels with columns `id` and `pred_slices`.
 ===============  ==================================  ==========================================================================
 
-TODO: Provide more details on how to run slice discovery evaluation. 
+
 
 
 .. _budgetclean:
 
-Minimal Feature Cleaning
+Data Cleaning on a Budget 
 --------------------------------------------
 
 .. sidebar::
@@ -98,7 +100,7 @@ Minimal Feature Cleaning
     :Task ID:      ``budgetclean``
     :Problems:     144
 
-When it comes to data preparation, data cleaning is often an essential yet quite costly task. If we are given a fixed cleaning budget, the challenge is to find the training data examples that would would bring the biggest positive impact on model performance if we were to clean them.
+When it comes to data preparation, data cleaning is an essential yet quite costly task. If we are given a fixed cleaning budget, the challenge is to find the training data examples that would would bring the biggest positive impact on model performance if we were to clean them.
 
 **Classes**: :class:`dcbench.BudgetcleanProblem` :class:`dcbench.BudgetcleanSolution`
 
@@ -129,4 +131,4 @@ name              type                          description
 ``idx_selected``  :class:`dcbench.CSVArtifact`
 ================  ============================  =============
 
-TODO: Provide more details on how to run budgetclean evaluation. 
+
