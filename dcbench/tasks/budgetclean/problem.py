@@ -10,13 +10,13 @@ from dcbench.common.artifact import ArtifactSpec, CSVArtifact
 from .common import Preprocessor
 
 
-class BudgetcleanSolution(Solution):
+class BudgetCleanSolution(Solution):
     artifact_specs: Mapping[str, ArtifactSpec] = {
         "idx_selected": ArtifactSpec(artifact_type=CSVArtifact, description="")
     }
 
 
-class BudgetcleanProblem(Problem):
+class BudgetCleanProblem(Problem):
 
     artifact_specs: Mapping[str, ArtifactSpec] = {
         "X_train_dirty": ArtifactSpec(
@@ -108,9 +108,9 @@ class BudgetcleanProblem(Problem):
             )
 
         # Construct and return a solution object.
-        return BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
+        return BudgetCleanSolution.from_artifacts({"idx_selected": idx_selected_df})
 
-    def evaluate(self, solution: Solution) -> "Result":
+    def evaluate(self, solution: BudgetCleanSolution) -> "Result":
 
         # Load scenario artifacts.
         X_train_dirty = self["X_train_dirty"]
@@ -181,6 +181,6 @@ task = Task(
         "to find the training data examples that would would bring the biggest "
         "positive impact on model performance if we were to clean them."
     ),
-    problem_class=BudgetcleanProblem,
-    solution_class=BudgetcleanSolution,
+    problem_class=BudgetCleanProblem,
+    solution_class=BudgetCleanSolution,
 )

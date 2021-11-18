@@ -185,7 +185,7 @@ class CSVArtifact(Artifact):
     def load(self) -> pd.DataFrame:
         self._ensure_downloaded()
         data = pd.read_csv(self.local_path, index_col=0)
-        
+
         def parselists(x):
             if isinstance(x, str):
                 try:

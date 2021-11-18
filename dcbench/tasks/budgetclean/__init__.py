@@ -2,7 +2,7 @@
 
 from ...common import Task
 from .common import Preprocessor
-from .problem import BudgetcleanProblem, BudgetcleanSolution
+from .problem import BudgetCleanProblem, BudgetCleanSolution
 
 # TODO: consider changing this name, word minimal doesn't feel appropriate since
 # the budget is fixed
@@ -15,6 +15,6 @@ task = Task(
         "to find the training data examples that would would bring the biggest "
         "positive impact on model performance if we were to clean them."
     ),
-    problem_class=BudgetcleanProblem,
-    solution_class=BudgetcleanSolution,
+    problem_class=BudgetCleanProblem,
+    solution_class=BudgetCleanSolution,
 )

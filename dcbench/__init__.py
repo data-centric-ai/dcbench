@@ -12,7 +12,7 @@ from .common.artifact import (
     YAMLArtifact,
 )
 from .config import config
-from .tasks.budgetclean import BudgetcleanProblem
+from .tasks.budgetclean import BudgetCleanProblem
 from .tasks.budgetclean import task as budgetclean
 from .tasks.minidata import MiniDataProblem
 from .tasks.minidata import task as minidata
@@ -27,7 +27,7 @@ __all__ = [
     "Artifact",
     "Problem",
     "Solution",
-    "BudgetcleanProblem",
+    "BudgetCleanProblem",
     "MiniDataProblem",
     "SliceDiscoveryProblem",
     "Task",

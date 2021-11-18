@@ -1,5 +1,7 @@
 from typing import Mapping
 
+import meerkat as mk
+
 from dcbench.common import Problem, Solution, Task
 from dcbench.common.artifact import (
     ArtifactSpec,
@@ -7,6 +9,8 @@ from dcbench.common.artifact import (
     ModelArtifact,
     VisionDatasetArtifact,
 )
+
+from .metrics import compute_metrics
 
 
 class SliceDiscoverySolution(Solution):
@@ -59,8 +63,20 @@ class SliceDiscoveryProblem(Problem):
     def from_id(cls, scenario_id: str):
         pass
 
-    def evaluate(self, solution: Solution):
-        pass
+    def solve(self, pred_slices: mk.DataPanel) -> SliceDiscoverySolution:
+        if ("id" not in pred_slices) or ("pred_slices" not in pred_slices):
+            raise ValueError(
+                f"DataPanel passed to {self.__class__.__name__} must include columns "
+                ""
+            )
+        return SliceDiscoverySolution.from_artifacts(
+            artifacts={"pred_slices": pred_slices}
+        )
+
+    def evaluate(self, solution: SliceDiscoverySolution) -> dict:
+        dp = mk.merge(self["slices"], solution["pred_slices"], on="id")
+        result = compute_metrics(dp=dp)
+        return result[["precision_at_10", "precision_at_25", "auroc"]].mean().to_dict()
 
 
 task = Task(
