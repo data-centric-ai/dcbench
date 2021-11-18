@@ -14,6 +14,7 @@ from urllib.request import urlopen, urlretrieve
 
 import meerkat as mk
 import pandas as pd
+from torch._C import Value
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 
@@ -233,28 +234,37 @@ class VisionDatasetArtifact(DataPanelArtifact):
     DEFAULT_EXT: str = "mk"
     isdir: bool = True
 
-    COLUMN_SUBSETS = {"celeba": ["image", "identity", "image_id", "split"]}
+    COLUMN_SUBSETS = {
+        "celeba": ["id", "image", "identity", "split"],
+        "imagenet": ["id", "image", "name", "synset"],
+    }
 
     @classmethod
     def from_name(cls, name: str):
         if name == "celeba":
             dp = mk.datasets.get(name, dataset_dir=config.celeba_dir)
-            dp = dp[cls.COLUMN_SUBSETS[name]]
-            dp["id"] = dp["image_id"]
-            dp.remove_column("image_id")
         elif name == "imagenet":
             dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir)
         else:
             raise ValueError(f"No dataset named '{name}' supported by dcbench.")
+        dp["id"] = dp["image_id"]
+        dp.remove_column("image_id")
+        dp = dp[cls.COLUMN_SUBSETS[name]]
         artifact = cls.from_data(data=dp, artifact_id=name)
         return artifact
 
     def download(self, force: bool = False):
-        dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
-        if self.id in self.COLUMN_SUBSETS:
-            self.save(data=dp[self.COLUMN_SUBSETS[self.id]])
+        if self.id == "celeba":
+            dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
+        elif self.id == "imagenet":
+            dp = mk.datasets.get(self.id, dataset_dir=config.imagenet_dir)
         else:
-            self.save(data=dp)
+            raise ValueError(f"No dataset named '{self.id}' supported by dcbench.")
+
+        dp["id"] = dp["image_id"]
+        dp.remove_column("image_id")
+        dp = dp[self.COLUMN_SUBSETS[self.id]]
+        self.save(data=dp[self.COLUMN_SUBSETS[self.id]])
 
 
 class ModelArtifact(Artifact):

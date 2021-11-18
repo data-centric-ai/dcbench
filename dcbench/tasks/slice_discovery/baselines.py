@@ -4,6 +4,8 @@ import numpy as np
 from ...common.baseline import baseline
 from .problem import SliceDiscoveryProblem, SliceDiscoverySolution
 
+from sklearn.decomposition import PCA
+
 
 @baseline(
     id="confusion_sdm",
@@ -29,7 +31,7 @@ def confusion_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
     n_pred_slices: int = problem.n_pred_slices
 
     # the only aritfact used by this simple baseline is the model predictions
-    predictions_dp = problem["predictions"]
+    predictions_dp = problem["test_predictions"]
 
     pred_slices = np.stack(
         [
@@ -60,4 +62,45 @@ def confusion_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
         pred_slices_dp=mk.DataPanel(
             {"id": predictions_dp["id"], "pred_slices": pred_slices}
         )
+    )
+
+
+@baseline(id="domino_sdm", summary=("An error aware mixture model."))
+def domino_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
+    from .domino import DominoMixture
+
+    # the budget of predicted slices allowed by the problem
+    n_pred_slices: int = problem.n_pred_slices
+
+    mm = DominoMixture(
+        n_components=25,
+        weight_y_log_likelihood=25,
+        init_params="error",
+        covariance_type="diag",
+    )
+
+    dp = mk.merge(problem["val_predictions"], problem["clip"], on="id")
+    emb = dp["emb"]
+
+    pca = PCA(n_components=128)
+    pca.fit(X=emb)
+    pca.fit(X=emb)
+    emb = pca.transform(X=emb)
+
+    mm.fit(X=emb, y=dp["target"], y_hat=dp["probs"])
+
+    slice_cluster_indices = (
+        -np.abs((mm.y_probs[:, 1] - mm.y_hat_probs[:, 1]))
+    ).argsort()[:n_pred_slices]
+
+    dp = mk.merge(problem["test_predictions"], problem["clip"], on="id")
+    emb = dp["emb"]
+    clusters = mm.predict_proba(
+        X=pca.transform(dp["emb"]), y=dp["target"], y_hat=dp["probs"]
+    )
+
+    pred_slices = clusters[:, slice_cluster_indices]
+
+    return problem.solve(
+        pred_slices_dp=mk.DataPanel({"id": dp["id"], "pred_slices": pred_slices})
     )

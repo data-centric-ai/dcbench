@@ -1,6 +1,6 @@
 from dcbench.common import Task
 
-from .baselines import confusion_sdm
+from .baselines import confusion_sdm, domino_sdm
 from .problem import SliceDiscoveryProblem, SliceDiscoverySolution
 
 __all__ = [

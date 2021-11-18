@@ -29,14 +29,21 @@ class SliceDiscoverySolution(Solution):
 class SliceDiscoveryProblem(Problem):
 
     artifact_specs: Mapping[str, ArtifactSpec] = {
-        "predictions": ArtifactSpec(
+        "val_predictions": ArtifactSpec(
             artifact_type=DataPanelArtifact,
             description=(
                 "A DataPanel of the model's predictions with columns `id`,"
                 "`target`, and `probs.`"
             ),
         ),
-        "slices": ArtifactSpec(
+        "test_predictions": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
+            description=(
+                "A DataPanel of the model's predictions with columns `id`,"
+                "`target`, and `probs.`"
+            ),
+        ),
+        "test_slices": ArtifactSpec(
             artifact_type=DataPanelArtifact,
             description="A DataPanel of the ground truth slice labels with columns "
             " `id`, `slices`.",
@@ -55,6 +62,10 @@ class SliceDiscoveryProblem(Problem):
             description="A DataPanel representing the base dataset with columns `id` "
             "and `image`.",
         ),
+        "clip": ArtifactSpec(
+            artifact_type=DataPanelArtifact,
+            description="A DataPanel of the image embeddings from OpenAI's CLIP model",
+        ),
     }
 
     task_id: str = "slice_discovery"
@@ -67,10 +78,13 @@ class SliceDiscoveryProblem(Problem):
             )
 
         return SliceDiscoverySolution.from_artifacts(
-            artifacts={"pred_slices": pred_slices_dp}
+            artifacts={"pred_slices": pred_slices_dp},
+            attributes={
+                "problem_id": self.id
+            }
         )
 
     def evaluate(self, solution: SliceDiscoverySolution) -> dict:
-        dp = mk.merge(self["slices"], solution["pred_slices"], on="id")
+        dp = mk.merge(self["test_slices"], solution["pred_slices"], on="id")
         result = compute_metrics(dp["slices"], dp["pred_slices"])
         return result[["precision_at_10", "precision_at_25", "auroc"]].mean().to_dict()

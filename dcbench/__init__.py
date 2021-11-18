@@ -13,7 +13,6 @@ from .common.artifact import (
 )
 from .config import config
 from .tasks.budgetclean import BudgetcleanProblem
-from .tasks.budgetclean import task as budgetclean
 from .tasks.minidata import MiniDataProblem
 from .tasks.slice_discovery import SliceDiscoveryProblem
 from .version import __version__

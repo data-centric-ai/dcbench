@@ -82,6 +82,6 @@ def compute_metrics(slices: np.ndarray, pred_slices: np.ndarray) -> dict:
             ]
         )
         # take the predicted slice idx with the maximum auroc
-        rows.append(df.loc[df["auroc"].idxmax()].to_dict())
+        rows.append(df.loc[df["precision_at_10"].idxmax()].to_dict())
 
     return pd.DataFrame(rows)
