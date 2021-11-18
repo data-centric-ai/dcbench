@@ -33,7 +33,7 @@ def get_artifact_table(task: dcbench.Task):
 
 sections = [".. _tasks:\n\n🎯 Tasks\n========="]
 template = open("source/task_template.rst").read()
-for task in dcbench.tasks:
+for task in dcbench.tasks.values():
     longer_description = open(
         os.path.join("source/task_descriptions", f"{task.task_id}.rst")
     ).read()
