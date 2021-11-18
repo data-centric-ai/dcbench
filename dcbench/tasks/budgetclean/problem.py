@@ -156,7 +156,7 @@ class BudgetcleanProblem(Problem):
             model_solution = LogisticRegression().fit(X_train_solution, y_train)
             model_dirty = LogisticRegression().fit(X_train_dirty, y_train)
             model_clean = LogisticRegression().fit(X_train_clean, y_train)
-        if self.attributes["model"] == "randomf":
+        elif self.attributes["model"] == "randomf":
             model_solution = RandomForestClassifier().fit(X_train_solution, y_train)
             model_dirty = RandomForestClassifier().fit(X_train_dirty, y_train)
             model_clean = RandomForestClassifier().fit(X_train_clean, y_train)
