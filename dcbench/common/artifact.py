@@ -240,6 +240,8 @@ class VisionDatasetArtifact(DataPanelArtifact):
         if name == "celeba":
             dp = mk.datasets.get(name, dataset_dir=config.celeba_dir)
             dp = dp[cls.COLUMN_SUBSETS[name]]
+            dp["id"] = dp["image_id"]
+            dp.remove_column("image_id")
         elif name == "imagenet":
             dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir)
         else:
@@ -332,7 +334,7 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
 
     def __getattr__(self, k: str) -> Any:
         try:
-            return self[k]
+            return self.attributes[k]
         except KeyError:
             raise AttributeError(k)
 
@@ -403,7 +405,7 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
     def to_yaml(dumper: yaml.Dumper, data: ArtifactContainer):
         data = {
             "class": type(data),
-            "container_id": data.container_id,
+            "container_id": data.id,
             "attributes": data._attributes,
             "artifacts": data.artifacts,
         }

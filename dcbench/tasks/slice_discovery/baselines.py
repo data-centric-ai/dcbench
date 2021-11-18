@@ -2,15 +2,21 @@ import meerkat as mk
 import numpy as np
 
 from ...common.baseline import baseline
-from . import SliceDiscoveryProblem, SliceDiscoverySolution
+from .problem import SliceDiscoveryProblem, SliceDiscoverySolution
 
 
-@baseline
+@baseline(
+    id="confusion_sdm",
+    summary=(
+        "A simple slice discovery method that returns a slice corresponding to "
+        "each cell of the confusion matrix."
+    ),
+)
 def confusion_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
-    """A simple slice discovery that returns a slice corresponding to each cell of the
-     confusion matrix. For example, for a binary prediction task, this sdm will return
-     4 slices corresponding to true positives, false positives, true negatives and
-     false negatives.
+    """A simple slice discovery method that returns a slice corresponding to each cell
+     of the confusion matrix. For example, for a binary prediction task, this sdm will
+     return 4 slices corresponding to true positives, false positives, true negatives
+     and false negatives.
 
     Args:
         problem (SliceDiscoveryProblem): The slice discovery problem.

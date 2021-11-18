@@ -47,7 +47,7 @@ class Task(RowMixin):
         ids = []
         for container in containers:
             assert isinstance(container, self.problem_class)
-            ids.append(container.container_id)
+            ids.append(container.id)
 
         if len(set(ids)) != len(ids):
             raise ValueError(
