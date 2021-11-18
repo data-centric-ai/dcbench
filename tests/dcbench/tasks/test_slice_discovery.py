@@ -7,7 +7,7 @@ import dcbench
 from dcbench.common.artifact import DataPanelArtifact
 from dcbench.common.table import Table
 from dcbench.common.task import Task
-from dcbench.tasks.slice_discovery import compute_metrics
+from dcbench.tasks.slice_discovery.metrics import compute_metrics
 
 
 def test_problems():
@@ -18,9 +18,9 @@ def test_problems():
 
 def test_problem():
     slice_discovery = dcbench.tasks["slice_discovery"]
-    problem = slice_discovery.problems["p_72074"]
+    problem = slice_discovery.problems["p_117634"]
 
-    for name in ["predictions", "slices", "activations"]:
+    for name in ["test_predictions", "val_predictions", "test_slices", "activations"]:
         out = problem[name]
         assert isinstance(out, mk.DataPanel)
 
@@ -32,10 +32,10 @@ def test_problem():
 
 def test_artifacts():
     slice_discovery = dcbench.tasks["slice_discovery"]
-    problem = slice_discovery.problems["p_72074"]
+    problem = slice_discovery.problems["p_117634"]
     artifacts = problem.artifacts
     assert isinstance(artifacts, dict)
-    for name in ["predictions", "slices", "activations"]:
+    for name in ["test_predictions", "val_predictions", "test_slices", "activations"]:
         artifact = artifacts[name]
         assert isinstance(artifact, DataPanelArtifact)
         assert not artifact.is_downloaded
