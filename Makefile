@@ -1,5 +1,6 @@
 autoformat:
 	black dcbench/ tests/
+	autoflake --in-place --remove-all-unused-imports -r dcbench	tests
 	isort --atomic dcbench/ tests/
 	docformatter --in-place --recursive dcbench tests
 

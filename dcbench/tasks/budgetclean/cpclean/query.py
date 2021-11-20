@@ -1,9 +1,12 @@
 """Solution to three queriers for KNN classifier."""
 import numpy as np
 
-from .algorithm.min_max import *
-from .algorithm.select import *
-from .algorithm.sort_count import *
+from .algorithm.min_max import min_max_val
+from .algorithm.select import min_entropy_expected, random_select
+from .algorithm.sort_count import sort_count_after_clean_multi, sort_count_dp_multi
+from .algorithm.utils import compute_entropy_by_counts
+
+# from .algorithm.sort_count import
 
 
 class Querier(object):
@@ -14,7 +17,8 @@ class Querier(object):
 
         Args:
             K (int): KNN hyper-parameter
-            space (list of list of np.array): each row contains a list of candidates (repairs) for one example
+            space (list of list of np.array): each row contains a list of candidates
+            (repairs) for one example
             y_train (np.array): labels of training set
             X_val (np.array): features of test set
             y_val (np.array): list of test set
@@ -31,7 +35,8 @@ class Querier(object):
         """Solution for q1.
 
         Return:
-            q1_results (list of boolean): for each example in test set, whether it can be CP'ed.
+            q1_results (list of boolean): for each example in test set, whether it can
+                be CP'ed.
         """
         if MM is None:
             MM = []
@@ -50,7 +55,8 @@ class Querier(object):
         """Solution for q2.
 
         Return:
-            results (list of dict): the number of worlds supporting each label for each example in test set.
+            results (list of dict): the number of worlds supporting each label for each
+                example in test set.
         """
         q2_results = sort_count_dp_multi(
             self.S_val, self.y_train, self.K, n_jobs=self.n_jobs, MM=MM

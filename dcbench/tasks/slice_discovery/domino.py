@@ -1,14 +1,10 @@
 import warnings
-from dataclasses import dataclass
 from functools import wraps
 
-import meerkat as mk
 import numpy as np
 import sklearn.cluster as cluster
-import torch.nn as nn
 from scipy import linalg
 from scipy.special import logsumexp
-from sklearn.decomposition import PCA
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._base import _check_X, check_random_state
@@ -60,7 +56,8 @@ class DominoMixture(GaussianMixture):
             num_classes = y.shape[-1]
             if self.n_components < num_classes ** 2:
                 raise ValueError(
-                    "Can't use parameter init 'error' when `n_components` < `num_classes **2`"
+                    "Can't use parameter init 'error' when `n_components` < "
+                    "`num_classes **2`"
                 )
             resp = np.matmul(y[:, :, np.newaxis], y_hat[:, np.newaxis, :]).reshape(
                 len(y), -1

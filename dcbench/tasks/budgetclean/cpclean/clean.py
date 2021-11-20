@@ -214,7 +214,7 @@ class CPClean(object):
             tic = time.time()
 
             # prune
-            non_cp_idx = np.argwhere(q1_results_pruned == False).ravel()
+            non_cp_idx = np.argwhere(q1_results_pruned == False).ravel()  # noqa: E712
             S_val_pruned = [S_val_pruned[i] for i in non_cp_idx]
             before_entropy_pruned = before_entropy_pruned[non_cp_idx]
             MM_pruned = [MM_pruned[i] for i in non_cp_idx]
@@ -278,7 +278,7 @@ class CPClean(object):
 
         while True:
             q1_results = init_querier.run_q1(MM=MM)
-            non_cp_idx = np.argwhere(q1_results == False).ravel()
+            non_cp_idx = np.argwhere(q1_results == False).ravel()  # noqa: E712
 
             if len(non_cp_idx) <= sample_size:
                 sampled_idx = non_cp_idx
@@ -335,7 +335,7 @@ class CPClean(object):
             tic = time.time()
 
             # prune
-            non_cp_idx = np.argwhere(q1_results_pruned == False).ravel()
+            non_cp_idx = np.argwhere(q1_results_pruned == False).ravel()  # noqa: E712
             S_val_pruned = [S_val_pruned[i] for i in non_cp_idx]
             MM_pruned = [MM_pruned[i] for i in non_cp_idx]
             n_non_cp_val = len(S_val_pruned)
@@ -414,7 +414,7 @@ class CPClean(object):
         for sel in select:
             tic = time.time()
             # prune
-            non_cp_idx = np.argwhere(q1_results_pruned == False).ravel()
+            non_cp_idx = np.argwhere(q1_results_pruned == False).ravel()  # noqa: E712
             S_val_pruned = [S_val_pruned[i] for i in non_cp_idx]
             MM_pruned = [MM_pruned[i] for i in non_cp_idx]
 

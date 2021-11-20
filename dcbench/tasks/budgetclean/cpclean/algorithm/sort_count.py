@@ -3,16 +3,9 @@
 sort_count_no_dp(S, y, K) sort_count_dp(S, y, K) sort_count_dpdc(S, y,
 K) sort_count_dpdc_after_clean(S, y, K) sort_count_after_clean(S, y, K)
 """
-import collections
-import itertools
-import time
-from collections import Counter
-from copy import deepcopy
 from functools import partial
-from itertools import combinations
 
 import numpy as np
-import pandas as pd
 
 from ..utils import Pool
 from .utils import compute_entropy_by_counts
@@ -129,7 +122,7 @@ def get_cases(n_must_alpha_c, n_must_beta_c, N_c, classes, K):
         N = N_c[c]
         cases_c[c] = set(range(n_must_beta, min(N - n_must_alpha + 1, K + 1)))
 
-    ####Only work for binary cases
+    # Only work for binary cases
     possible_cases = []
     max_n_beta = {c: 0 for c in classes}
     classes = list(classes)
@@ -147,8 +140,6 @@ def get_cases(n_must_alpha_c, n_must_beta_c, N_c, classes, K):
 def sort_count_dp(S_full, y_full, K, mm=None):
     S, y, valid_indices = prune(S_full, y_full, K, mm)
 
-    N = len(S)
-
     (
         alpha_beta_c,
         new_rid,
@@ -159,8 +150,6 @@ def sort_count_dp(S_full, y_full, K, mm=None):
         n_must_beta_c,
     ) = group_by_classes(S, y)
     world_counts = {c: 0 for c in classes}
-    world_ub = {c: 1 for c in classes}
-
     # sort
     sorted_A = sort(S, y)
 
@@ -230,7 +219,6 @@ def count_worlds_fix_ri(B, BR, n_beta, ri):
         # the top row, only use B
         n_world = B[1, n_beta]
     else:
-        # n_world = sum([B[ri+1, int(l)] * BR[ri, int(n_beta-l)] for l in range(n_beta+1)])
         n_world = B[ri + 1, : n_beta + 1].dot(BR[ri, : n_beta + 1][::-1])
     return n_world
 
@@ -338,7 +326,6 @@ def compute_after_entropy(valid_indices, y_full, ac_counters, dirty_rows):
 
 
 def sort_count_after_clean(S_full, y_full, K, mm=None):
-    tic = time.time()
     S, y, valid_indices = prune(S_full, y_full, K, mm)
 
     # print("prune", len(S), time.time() - tic)
@@ -469,102 +456,3 @@ def sort_count_after_clean_multi(S_val, y_train, K, n_jobs=4, MM=None):
             indices,
         )
     return after_entropies
-
-
-if __name__ == "__main__":
-    # S = np.array([[1, 1.5, 2.1], [2.2, 2.4, 3], [1.6, 2.3, 2.5], [1.1, 3.5, 4], [1.2, 4.5, 5]])
-    # y = np.array([1, 0, 0, 1, 1])
-    np.random.seed(1)
-    N = 5000
-    K = 3
-    S = np.random.rand(N, 10)
-    y = np.random.randint(0, 2, size=N)
-
-    tic = time.time()
-    result = sort_count_after_clean(S, y, K, np.arange(N))
-    print(time.time() - tic)
-    # print(result)
-
-    tic = time.time()
-    old_result = sort_count_after_clean_old(S, y, K, np.arange(N))
-    print(time.time() - tic)
-    # print(old_result)
-    # tic = time.time()
-    # ae1 = sort_count_after_clean(S, y, 3)
-    # print(time.time() - tic, ae1[0] / (ae1[1] + ae1[0]))
-
-    # print()
-    # N = 100
-    # alpha = np.random.randint(1, 10, size=(N, ))
-    # beta = 10 - alpha
-
-    # tic = time.time()
-    # B = compute_BR(alpha/10, beta/10, 3)
-    # print(time.time() - tic)
-    # print(B[0][-1])
-
-    # alpha_beta = np.vstack([alpha, beta]).T.tolist()
-
-    # tic = time.time()
-    # B_old = compute_BR_old(alpha_beta, 3)
-    # print(max(B_old[-1]) / (10 ** 100))
-    # print(time.time() - tic)
-
-    # print(sort_count_entropy(S, y, 3))
-
-
-#     tic = time.time()
-#     from copy import deepcopy
-#     S = S.tolist()
-#     ae2 = []
-#     for i in range(5):
-#         ae_i = []
-#         for j in range(3):
-#             S_a = deepcopy(S)
-#             S_a[i] = [S[i][j]]
-#             count = sort_count_dpdc(S_a, y, 3)
-#             ae_i.append(count)
-#         ae2.append(ae_i)
-#     print(time.time() - tic)
-
-#     for a1, a2 in zip(ae1, ae2):
-#         for e1, e2 in zip(a1, a2):
-#             print(e1 == e2)
-
-# print(sort_count_no_dp(S, y, 1))
-
-# print(sort_count_entropy(S, y, 3))
-
-# S = np.array([[1, 1.5, 2.1], [2.2, 2.4, 3.1], [1.6, 2.3, 2.5], [1.1, 3.5, 4], [4.1, 4.5, 5]])
-# y = np.array([1, 0, 0, 1, 1])
-# print(sort_count_no_dp(S, y, 3))
-# print("___________")
-# print(sort_count_dp(S, y, 3))
-# print(sort_count_dpdc(S, y, 3))
-
-# N = 1000
-# S = np.random.rand(N, 10)
-# y = np.random.randint(0, 2, size=N)
-# tic = time.time()
-# print(sort_count_entropy(S, y, 3))
-# print(time.time() - tic)
-
-
-# a = {i:10 for i in range(10000)}
-# b = {i:10 for i in range(5000, 15000)}
-# tic = time.time()
-# c_dict = dict_product3(a, b)
-# print(len(a))
-# print(len(c_dict))
-# print(time.time() - tic)
-
-# N = 10000
-# alpha = np.random.randint(1, 10, size=(N, )).tolist()
-# beta = np.random.randint(1, 10, size=(N, )).tolist()
-
-# tic = time.time()
-# B = compute_B(alpha, beta, 3)
-# BR = compute_BR(alpha, beta, 3)
-
-# print(B[0][2] == BR[N][2])
-# print((time.time() - tic)*N)

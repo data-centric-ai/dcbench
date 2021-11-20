@@ -2,7 +2,6 @@
 of data preparation and handling in the context of AI workflows."""
 # flake8: noqa
 
-from .__main__ import main
 from .common import Artifact, Problem, Solution, Table, Task
 from .common.artifact import (
     CSVArtifact,
@@ -15,7 +14,6 @@ from .config import config
 from .tasks.budgetclean import BudgetcleanProblem
 from .tasks.minidata import MiniDataProblem
 from .tasks.slice_discovery import SliceDiscoveryProblem
-from .version import __version__
 
 __all__ = [
     "Artifact",

@@ -53,6 +53,7 @@ EXTRAS = {
     "dev": [
         "black==21.5b0",
         "isort>=5.7.0",
+        "autoflake",
         "flake8>=3.8.4",
         "mypy>=0.9",
         "docformatter>=1.4",

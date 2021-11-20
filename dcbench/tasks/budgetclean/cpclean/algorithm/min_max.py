@@ -1,12 +1,6 @@
-import time
-from collections import Counter
-from functools import partial
-
 import numpy as np
-import pandas as pd
 
-from ..utils import Pool
-from .utils import majority_vote, product
+from .utils import majority_vote
 
 
 def min_max(mm, y, K):
@@ -27,7 +21,7 @@ def min_max(mm, y, K):
 
         # set min max
         best_scenario[mask] = mm[:, 1][mask]
-        best_scenario[(mask == False)] = mm[:, 0][(mask == False)]
+        best_scenario[(mask == False)] = mm[:, 0][(mask == False)]  # noqa: E712
 
         # run KNN
         order = np.argsort(-best_scenario, kind="stable")

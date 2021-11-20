@@ -1,10 +1,4 @@
-from collections import Counter, defaultdict
-from multiprocessing import Pool
-
 import numpy as np
-from scipy.stats import entropy
-
-from .utils import compute_entropy_by_counts, compute_entropy_by_labels
 
 
 def random_select(dirty_rows):
@@ -28,7 +22,8 @@ def min_entropy_expected(
 ):  # already checked
     """
     Args:
-        ac_counters_val (list): Counts after clean for each cell for each test example (only for dirty rows)
+        ac_counters_val (list): Counts after clean for each cell for each test example
+            (only for dirty rows)
         dirty rows (list): indices of dirty rows
     """
     avg_entropies_val = [
@@ -52,7 +47,8 @@ def entropy_expected(
 ):  # already checked
     """
     Args:
-        ac_counters_val (list): Counts after clean for each cell for each test example (only for dirty rows)
+        ac_counters_val (list): Counts after clean for each cell for each test example
+            (only for dirty rows)
         dirty rows (list): indices of dirty rows
     """
     avg_entropies_val = [

@@ -1,9 +1,7 @@
 import os
 import shutil
 import tempfile
-from typing import Any, Mapping, Sequence
-
-import yaml
+from typing import Mapping, Sequence
 
 from dcbench.common import Problem, Solution, Task
 from dcbench.common.artifact import ArtifactSpec, DataPanelArtifact, YAMLArtifact

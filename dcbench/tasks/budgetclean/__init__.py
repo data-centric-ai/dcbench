@@ -3,7 +3,6 @@
 from ...common import Task
 from ...common.table import Table
 from .baselines import cp_clean, random_clean
-from .common import Preprocessor
 from .problem import BudgetcleanProblem, BudgetcleanSolution
 
 __all__ = [""]
