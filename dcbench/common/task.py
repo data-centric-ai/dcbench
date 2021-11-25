@@ -1,7 +1,7 @@
 import functools
 import os
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Sequence, Type
 from urllib.request import urlretrieve
 
 import pandas as pd
@@ -17,6 +17,9 @@ from .bundle import RelationalBundle
 storage = LazyLoader("google.cloud.storage")
 
 
+tasks: RelationalBundle = RelationalBundle(items={}, attributes=["name", "summary"])
+
+
 @dataclass
 class Task:
 
@@ -26,6 +29,9 @@ class Task:
     problem_class: type
     solution_class: type
     baselines: RelationalBundle = RelationalBundle()
+
+    def __post_init__(self) -> None:
+        tasks[self.task_id] = self
 
     @property
     def problems_path(self):

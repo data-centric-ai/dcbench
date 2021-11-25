@@ -39,9 +39,4 @@ __all__ = [
     "config",
 ]
 
-
-tasks = [
-    minidata,
-    slice_discovery,
-    budgetclean,
-]
+from .common import tasks

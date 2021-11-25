@@ -10,4 +10,4 @@ from .artifact import (
 from .problem import Problem
 from .result import Result
 from .solution import Solution
-from .task import Task
+from .task import Task, tasks

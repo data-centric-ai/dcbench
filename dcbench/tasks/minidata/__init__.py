@@ -1,9 +1,9 @@
+import meerkat as mk
 import os
+import pandas as pd
 import shutil
 import tempfile
 from typing import Any, Mapping, Sequence
-
-import yaml
 
 from dcbench.common import Problem, Solution, Task
 from dcbench.common.artifact import ArtifactSpec, DataPanelArtifact, YAMLArtifact
@@ -51,8 +51,46 @@ class MiniDataProblem(Problem):
 
     task_id: str = "minidata"
 
-    def evaluate(self, solution: Solution):
 
+    def solve(self, idx_selected: Any, **kwargs: Any) -> Solution:
+
+        # Construct the solution object as a Pandas DataFrame.
+        idx_selected_dp = None
+        if isinstance(idx_selected, mk.DataPanel):
+            idx_selected_dp = mk.DataPanel(
+                {"idx_selected": idx_selected[idx_selected.columns[0]].data.astype(bool)}
+            )
+        elif isinstance(idx_selected, pd.DataFrame):
+            idx_selected_dp = mk.DataPanel(
+                {"idx_selected": idx_selected.iloc[:, 0].values.astype(bool)}
+            )
+        elif isinstance(idx_selected, list):
+            idx_selected_dp = mk.DataPanel({"idx_selected": idx_selected}).astype(
+                "bool"
+            )
+        else:
+            raise ValueError(
+                "The provided idx_selected object must be either a list or a DataFrame."
+            )
+
+        # Check if the content of the solution object is valid.
+        X_train_dirty = self["X_train_dirty"]
+        if len(X_train_dirty) != len(idx_selected_dp):
+            raise ValueError(
+                "The number of elements of the provided solution object must be the "
+                "same as for the training dataset. (expected: %d, found: %d)"
+                % (len(X_train_dirty), len(idx_selected_dp))
+            )
+
+        # Construct and return a solution object.
+        solution = MiniDataSolution.from_artifacts({"idx_selected": idx_selected_dp})
+        solution.attributes["problem_id"] = self.container_id
+        for k, v in self.attributes.items():
+            solution.attributes[k] = v
+        return solution
+
+
+    def evaluate(self, solution: Solution):
         train_dp = self["train_data"]
         train_ids = solution["train_ids"]
 

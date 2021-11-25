@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .artifact import ArtifactContainer
 
@@ -18,6 +18,10 @@ class Problem(ArtifactContainer):
     summary: str
     task_id: str
     solution_class: type
+
+    @abstractmethod
+    def solve(self, **kwargs: Any) -> Solution:
+        raise NotImplementedError
 
     @abstractmethod
     def evaluate(self, solution: Solution):
