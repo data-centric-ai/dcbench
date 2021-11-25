@@ -37,7 +37,7 @@ and explore the data-centric problems in the benchmark:
 import dcbench
 dcbench.tasks
 ```
-To learn more, follow the 'walkthrough' in our docs. 
+To learn more, follow the [walkthrough](https://dcbench.readthedocs.io/en/latest/intro.html#api-walkthrough) in the docs. 
 
 
 ## 💡 What is dcbench?

@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 # flake8: noqa
 
-import errno
 import gzip
 import hashlib
 import os

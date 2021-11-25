@@ -126,5 +126,5 @@ task = Task(
     summary="Given a large training dataset, what is the smallest subset you can sample that still achieves some threshold of performance.",
     problem_class=MiniDataProblem,
     solution_class=MiniDataSolution,
-    baselines=None
+    baselines=None,
 )

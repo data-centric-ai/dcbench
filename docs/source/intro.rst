@@ -54,14 +54,14 @@ Each task features a collection of *problems* (*i.e.* instances of the task). Fo
 
 .. ipython:: python
 
-   dcbench.slice_discovery.problems_df
+   dcbench.tasks["slice_discovery"].problems
 
 All of a task's problems share the same structure and use the same evaluation scripts.
 This is specified via task-specific subclasses of :class:`dcbench.Problem` (*e.g.* :class:`~dcbench.SliceDiscoveryProblem`). The problems themselves are instances of these subclasses. We can access a  problem using it's id:
 
 .. ipython:: python
 
-   problem = dcbench.slice_discovery.problems["p_72063"]
+   problem = dcbench.tasks["slice_discovery"].problems["p_118919"]
    problem
 
 

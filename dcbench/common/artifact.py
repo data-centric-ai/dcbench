@@ -21,6 +21,8 @@ import dcbench.constants as constants
 from dcbench.common.modeling import Model
 from dcbench.config import config
 
+from .table import RowMixin
+
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
 
@@ -185,7 +187,7 @@ class CSVArtifact(Artifact):
     def load(self) -> pd.DataFrame:
         self._ensure_downloaded()
         data = pd.read_csv(self.local_path, index_col=0)
-        
+
         def parselists(x):
             if isinstance(x, str):
                 try:
@@ -231,26 +233,37 @@ class VisionDatasetArtifact(DataPanelArtifact):
     DEFAULT_EXT: str = "mk"
     isdir: bool = True
 
-    COLUMN_SUBSETS = {"celeba": ["image", "identity", "image_id", "split"]}
+    COLUMN_SUBSETS = {
+        "celeba": ["id", "image", "identity", "split"],
+        "imagenet": ["id", "image", "name", "synset"],
+    }
 
     @classmethod
     def from_name(cls, name: str):
         if name == "celeba":
             dp = mk.datasets.get(name, dataset_dir=config.celeba_dir)
-            dp = dp[cls.COLUMN_SUBSETS[name]]
         elif name == "imagenet":
             dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir)
         else:
             raise ValueError(f"No dataset named '{name}' supported by dcbench.")
+        dp["id"] = dp["image_id"]
+        dp.remove_column("image_id")
+        dp = dp[cls.COLUMN_SUBSETS[name]]
         artifact = cls.from_data(data=dp, artifact_id=name)
         return artifact
 
     def download(self, force: bool = False):
-        dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
-        if self.id in self.COLUMN_SUBSETS:
-            self.save(data=dp[self.COLUMN_SUBSETS[self.id]])
+        if self.id == "celeba":
+            dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
+        elif self.id == "imagenet":
+            dp = mk.datasets.get(self.id, dataset_dir=config.imagenet_dir)
         else:
-            self.save(data=dp)
+            raise ValueError(f"No dataset named '{self.id}' supported by dcbench.")
+
+        dp["id"] = dp["image_id"]
+        dp.remove_column("image_id")
+        dp = dp[self.COLUMN_SUBSETS[self.id]]
+        self.save(data=dp[self.COLUMN_SUBSETS[self.id]])
 
 
 class ModelArtifact(Artifact):
@@ -284,7 +297,7 @@ class ArtifactSpec:
     artifact_type: type
 
 
-class ArtifactContainer(ABC, Mapping):
+class ArtifactContainer(ABC, Mapping, RowMixin):
 
     artifact_specs: Mapping[str, ArtifactSpec]
     task_id: str = "none"
@@ -292,11 +305,11 @@ class ArtifactContainer(ABC, Mapping):
 
     def __init__(
         self,
-        container_id: str,
+        id: str,
         artifacts: Mapping[str, Artifact],
         attributes: Mapping[str, BASIC_TYPE] = None,
     ):
-        self.container_id = container_id
+        super().__init__(id=id)
         artifacts = self._create_artifacts(artifacts=artifacts)
         self._check_artifact_specs(artifacts=artifacts)
         self.artifacts = artifacts
@@ -313,18 +326,8 @@ class ArtifactContainer(ABC, Mapping):
     ):
         if container_id is None:
             container_id = uuid.uuid4().hex
-        container = cls(
-            container_id=container_id, artifacts=artifacts, attributes=attributes
-        )
+        container = cls(id=container_id, artifacts=artifacts, attributes=attributes)
         return container
-
-    @property
-    def attributes(self):
-        return self._attributes
-
-    @attributes.setter
-    def attributes(self, value):
-        self._attributes = value
 
     def __getitem__(self, key):
         artifact = self.artifacts.__getitem__(key)
@@ -337,6 +340,12 @@ class ArtifactContainer(ABC, Mapping):
 
     def __len__(self):
         return self.artifacts.__len__()
+
+    def __getattr__(self, k: str) -> Any:
+        try:
+            return self.attributes[k]
+        except KeyError:
+            raise AttributeError(k)
 
     @property
     def is_downloaded(self) -> bool:
@@ -368,7 +377,7 @@ class ArtifactContainer(ABC, Mapping):
                     self.task_id,
                     self.container_type,
                     constants.ARTIFACTS_DIR,
-                    self.container_id,
+                    self.id,
                     name,
                 ),
             )
@@ -396,7 +405,7 @@ class ArtifactContainer(ABC, Mapping):
     def from_yaml(loader: yaml.Loader, node):
         data = loader.construct_mapping(node, deep=True)
         return data["class"](
-            container_id=data["container_id"],
+            id=data["container_id"],
             artifacts=data["artifacts"],
             attributes=data["attributes"],
         )
@@ -405,7 +414,7 @@ class ArtifactContainer(ABC, Mapping):
     def to_yaml(dumper: yaml.Dumper, data: ArtifactContainer):
         data = {
             "class": type(data),
-            "container_id": data.container_id,
+            "container_id": data.id,
             "attributes": data._attributes,
             "artifacts": data.artifacts,
         }

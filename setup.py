@@ -43,7 +43,7 @@ REQUIRED = [
     # "torch>=1.8.0",
     "tqdm>=4.49.0",
     "scikit-learn",
-    "meerkat-ml[dev,vision,ml] @ git+https://github.com/robustness-gym/meerkat@dev",
+    "meerkat-ml[dev,vision,ml]",
     # "torchvision>=0.9.0",
     # "wandb",
     # "ray[default]",
@@ -53,6 +53,7 @@ EXTRAS = {
     "dev": [
         "black==21.5b0",
         "isort>=5.7.0",
+        "autoflake",
         "flake8>=3.8.4",
         "mypy>=0.9",
         "docformatter>=1.4",

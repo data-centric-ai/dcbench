@@ -1,11 +1,9 @@
 import logging
-import os
 from typing import Optional
 
 import click
 
 from dcbench.common import Solution
-from dcbench.config import config
 
 from .version import __version__
 
@@ -47,7 +45,6 @@ def main(
 ):
     """Collection of benchmarks that test various aspects of ML data
     preprocessing and management."""
-    pass
 
 
 @main.command(help="List all available scenarios.")
