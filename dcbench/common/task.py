@@ -15,10 +15,6 @@ from .artifact import ArtifactContainer
 
 storage = LazyLoader("google.cloud.storage")
 
-
-tasks: RelationalBundle = RelationalBundle(items={}, attributes=["name", "summary"])
-
-
 @dataclass
 class Task(RowMixin):
 
@@ -33,9 +29,6 @@ class Task(RowMixin):
         super().__init__(
             id=self.task_id, attributes={"name": self.name, "summary": self.summary}
         )
-
-    def __post_init__(self) -> None:
-        tasks[self.task_id] = self
 
     @property
     def problems_path(self):
