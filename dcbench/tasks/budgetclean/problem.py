@@ -110,7 +110,7 @@ class BudgetcleanProblem(Problem):
 
         # Construct and return a solution object.
         solution = BudgetcleanSolution.from_artifacts({"idx_selected": idx_selected_df})
-        solution.attributes["problem_id"] = self.container_id
+        solution.attributes["problem_id"] = self.id
         for k, v in self.attributes.items():
             solution.attributes[k] = v
         return solution
@@ -180,4 +180,4 @@ class BudgetcleanProblem(Problem):
 
         result_dict = {**result_dict, **solution.attributes}
 
-        return pd.Series(result_dict, name=solution.container_id)
+        return Result(id=solution.id, attributes=result_dict)

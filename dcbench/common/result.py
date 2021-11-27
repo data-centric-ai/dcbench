@@ -1,5 +1,8 @@
 # flake8: noqa
 
 
-class Result:
+from .table import RowMixin
+
+
+class Result(RowMixin):
     pass

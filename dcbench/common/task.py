@@ -1,12 +1,13 @@
 import functools
 import os
 from dataclasses import dataclass
-from typing import Sequence, Type
+from typing import Sequence
 from urllib.request import urlretrieve
 
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 from tqdm import tqdm
+from dcbench.common.problem import ProblemTable
 
 from dcbench.common.table import RowMixin, Table
 from dcbench.config import config
@@ -14,6 +15,7 @@ from dcbench.config import config
 from .artifact import ArtifactContainer
 
 storage = LazyLoader("google.cloud.storage")
+
 
 @dataclass
 class Task(RowMixin):
@@ -80,7 +82,7 @@ class Task(RowMixin):
         if not os.path.exists(self.local_problems_path):
             self.download_problems()
         problems = yaml.load(open(self.local_problems_path), Loader=yaml.FullLoader)
-        return Table(problems)
+        return ProblemTable(problems)
 
     def __repr__(self):
         return f'Task(task_id="{self.task_id}", name="{self.name}")'
