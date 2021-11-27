@@ -2,11 +2,11 @@ import meerkat as mk
 import numpy as np
 from sklearn.decomposition import PCA
 
-from ...common.baseline import baseline
+from ...common.solver import solver
 from .problem import SliceDiscoveryProblem, SliceDiscoverySolution
 
 
-@baseline(
+@solver(
     id="confusion_sdm",
     summary=(
         "A simple slice discovery method that returns a slice corresponding to "
@@ -64,7 +64,7 @@ def confusion_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
     )
 
 
-@baseline(id="domino_sdm", summary=("An error aware mixture model."))
+@solver(id="domino_sdm", summary=("An error aware mixture model."))
 def domino_sdm(problem: SliceDiscoveryProblem) -> SliceDiscoverySolution:
     from .domino import DominoMixture
 

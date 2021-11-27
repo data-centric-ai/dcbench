@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-from ...common.baseline import baseline
+from ...common.solver import solver
 from .common import Preprocessor
 from .cpclean.algorithm.select import entropy_expected
 from .cpclean.algorithm.sort_count import sort_count_after_clean_multi
@@ -13,7 +13,7 @@ from .cpclean.clean import CPClean, Querier
 from .problem import BudgetcleanProblem, BudgetcleanSolution
 
 
-@baseline(
+@solver(
     id="random_clean", summary="Always selects a random subset of the data to clean."
 )
 def random_clean(problem: BudgetcleanProblem, seed: int = 1337) -> BudgetcleanSolution:
@@ -25,7 +25,7 @@ def random_clean(problem: BudgetcleanProblem, seed: int = 1337) -> BudgetcleanSo
     return problem.solve(idx_selected=idx_selected)
 
 
-@baseline(
+@solver(
     id="cp_clean",
     summary=(
         "Perform the selection using the CPClean algorithm which aims to "
