@@ -1,17 +1,17 @@
 cff-version: 1.2.0
 message: "If you use this benchmark, please cite it as below."
 authors:
-- family-names: "Eyuboglu"
-  given-names: "Sabri"
-  orcid: "ttps://orcid.org/0000-0002-8412-0266"
-- family-names: "Karlaš"
-  given-names: "Bojan"
-- family-names: "Zhang"
-  given-names: "Ce"
-- family-names: "Ré
-  given-names: "Christopher"
-- family-names: "Zou"
-  given-names: "James"
+- family-names: Eyuboglu
+  given-names: Sabri
+  orcid: "https://orcid.org/0000-0002-8412-0266"
+- family-names: Karlaš
+  given-names: Bojan
+- family-names: Zhang
+  given-names: Ce
+- family-names: Ré
+  given-names: Christopher
+- family-names: Zou
+  given-names: James
 title: "dcbench"
 version: 1.0.0
 doi: 10.5281/zenodo.1234
