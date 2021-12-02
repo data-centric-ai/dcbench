@@ -10,6 +10,16 @@ from dcbench.common.task import Task
 from dcbench.tasks.slice_discovery.metrics import compute_metrics
 
 
+def test_solve():
+    slice_discovery = dcbench.tasks["slice_discovery"]
+
+    problem = slice_discovery.problems["p_117634"]
+
+    ids = problem["test_predictions"]["id"]
+    pred_slices = np.zeros((len(ids), 5))
+    problem.solve(pred_slices_dp=mk.DataPanel({"id": ids, "pred_slices": pred_slices}))
+
+
 def test_problems():
     slice_discovery = dcbench.tasks["slice_discovery"]
     assert isinstance(slice_discovery, Task)
