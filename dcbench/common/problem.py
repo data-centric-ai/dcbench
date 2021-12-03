@@ -7,7 +7,6 @@ from .artifact import ArtifactContainer
 from .result import Result
 from .table import Table
 
-
 if TYPE_CHECKING:
     from .trial import Trial
     from .solution import Solution

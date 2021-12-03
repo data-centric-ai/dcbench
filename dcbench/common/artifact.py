@@ -243,7 +243,7 @@ class VisionDatasetArtifact(DataPanelArtifact):
         if name == "celeba":
             dp = mk.datasets.get(name, dataset_dir=config.celeba_dir)
         elif name == "imagenet":
-            dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir)
+            dp = mk.datasets.get(name, dataset_dir=config.imagenet_dir, download=False)
         else:
             raise ValueError(f"No dataset named '{name}' supported by dcbench.")
         dp["id"] = dp["image_id"]
@@ -256,7 +256,7 @@ class VisionDatasetArtifact(DataPanelArtifact):
         if self.id == "celeba":
             dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
         elif self.id == "imagenet":
-            dp = mk.datasets.get(self.id, dataset_dir=config.imagenet_dir)
+            dp = mk.datasets.get(self.id, dataset_dir=config.imagenet_dir, download=False)
         else:
             raise ValueError(f"No dataset named '{self.id}' supported by dcbench.")
 
