@@ -65,6 +65,9 @@ jobs:
                 run: |
                     make docs
     Build:
+        permissions:
+            contents: 'read'
+            id-token: 'write'
         if:
             contains('
             refs/heads/main
