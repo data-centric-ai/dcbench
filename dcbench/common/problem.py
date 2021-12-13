@@ -8,8 +8,8 @@ from .result import Result
 from .table import Table
 
 if TYPE_CHECKING:
-    from .trial import Trial
     from .solution import Solution
+    from .trial import Trial
 
 
 class Problem(ArtifactContainer):
@@ -32,7 +32,7 @@ class Problem(ArtifactContainer):
 
 
 class ProblemTable(Table):
-
     def trial(self, solver: Optional[Callable[[Problem], Solution]] = None) -> Trial:
         from .trial import Trial
+
         return Trial(problems=list(self.values()), solver=solver)

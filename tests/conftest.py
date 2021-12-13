@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def set_test_bucket(monkeypatch):
-    test_bucket_name = "dcbench-test"
+    test_bucket_name = "dcbench"
     monkeypatch.setattr("dcbench.config.public_bucket_name", test_bucket_name)
 
 

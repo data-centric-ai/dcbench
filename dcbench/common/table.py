@@ -22,7 +22,6 @@ class RowMixin:
 
 
 class RowUnion(RowMixin):
-
     def __init__(self, id: str, elements: Sequence[RowMixin]):
         self._elements = elements
         attributes: Dict[str, BASIC_TYPE] = {}
@@ -33,7 +32,9 @@ class RowUnion(RowMixin):
 
 def predicate(a: BASIC_TYPE, b: Union[BASIC_TYPE, slice, Sequence[BASIC_TYPE]]) -> bool:
     if isinstance(b, slice):
-        return (b.start is not None and a >= b.start) and (b.stop is not None and a < b.stop)
+        return (b.start is not None and a >= b.start) and (
+            b.stop is not None and a < b.stop
+        )
     elif isinstance(b, Sequence):
         return a in b
     else:
@@ -65,13 +66,21 @@ class Table(Mapping[str, RowMixin]):
             {k: v.attributes for k, v in self._data.items()}, orient="index"
         )
 
-    def where(self, **kwargs: Union[BASIC_TYPE, slice, Sequence[BASIC_TYPE]]) -> "Table":
-        result_data = [item for item
-                       in self._data.values()
-                       if all(predicate(item.attributes.get(k, None), v) for (k, v) in kwargs.items())]
+    def where(
+        self, **kwargs: Union[BASIC_TYPE, slice, Sequence[BASIC_TYPE]]
+    ) -> "Table":
+        result_data = [
+            item
+            for item in self._data.values()
+            if all(
+                predicate(item.attributes.get(k, None), v) for (k, v) in kwargs.items()
+            )
+        ]
         return type(self)(result_data)
 
-    def average(self, *targets: str, groupby: Optional[Sequence[str]] = None, std: bool = False) -> "Table":
+    def average(
+        self, *targets: str, groupby: Optional[Sequence[str]] = None, std: bool = False
+    ) -> "Table":
         groupby = groupby or []
         df = self.df[chain(targets, groupby)]
         if groupby is not None and len(groupby) > 0:
@@ -83,9 +92,17 @@ class Table(Mapping[str, RowMixin]):
             df_std = df.std()
             if isinstance(df_std, pd.Series):
                 df_std = df_std.to_frame().T
-            df_result = pd.merge(df_result, df_std, left_index=True, right_index=True, suffixes=("", ":std"))
+            df_result = pd.merge(
+                df_result,
+                df_std,
+                left_index=True,
+                right_index=True,
+                suffixes=("", ":std"),
+            )
         df_result = df_result.reset_index()
-        result_rows = [RowMixin(id=str(id), attributes=row) for id, row in df_result.iterrows()]
+        result_rows = [
+            RowMixin(id=str(id), attributes=row) for id, row in df_result.iterrows()
+        ]
         return Table(result_rows)
 
     def __repr__(self) -> str:

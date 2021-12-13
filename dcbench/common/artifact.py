@@ -256,7 +256,9 @@ class VisionDatasetArtifact(DataPanelArtifact):
         if self.id == "celeba":
             dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
         elif self.id == "imagenet":
-            dp = mk.datasets.get(self.id, dataset_dir=config.imagenet_dir, download=False)
+            dp = mk.datasets.get(
+                self.id, dataset_dir=config.imagenet_dir, download=False
+            )
         else:
             raise ValueError(f"No dataset named '{self.id}' supported by dcbench.")
 

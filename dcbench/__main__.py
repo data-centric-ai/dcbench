@@ -1,11 +1,4 @@
 import logging
-from typing import Optional
-
-import click
-
-from dcbench.common import Solution
-
-from .version import __version__
 
 __all__ = ("main",)
 _log = logging.getLogger(__name__)
