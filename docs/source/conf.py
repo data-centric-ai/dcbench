@@ -82,3 +82,6 @@ html_theme_options = {}
 
 # Don't show module names in front of class names.
 add_module_names = False
+
+# Don't alphabetize the method names.
+autodoc_member_order = "bysource"
