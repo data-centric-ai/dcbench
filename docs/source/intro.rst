@@ -48,6 +48,8 @@ You can explore the supported tasks in the documentation (:any:`tasks`) or via t
 
 In the ``dcbench`` API, each task is represented by a :class:`dcbench.Task` object that can be accessed by *task_id* (*e.g.* ``dcbench.slice_discovery``). These task objects hold metadata about the task and hold pointers to task-specific :class:`dcbench.Problem` and :class:`dcbench.Solution` subclasses, discussed below.  
 
+.. _problem-intro:
+
 ``Problem``
 ~~~~~~~~~~~~
 Each task features a collection of *problems* (*i.e.* instances of the task). For example, the :any:`slice_discovery` task includes hundreds of problems across a number of different datasets. We can explore a task's problems in ``dcbench``:  

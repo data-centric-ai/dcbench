@@ -6,12 +6,25 @@ import meerkat as mk
 import numpy as np
 import pandas as pd
 import pytest
+import torch.nn as nn
 import yaml
 
-from dcbench.common.artifact import CSVArtifact, DataPanelArtifact
+from dcbench.common.artifact import (
+    Artifact,
+    CSVArtifact,
+    DataPanelArtifact,
+    ModelArtifact,
+    YAMLArtifact,
+)
+from dcbench.common.modeling import Model
 
 
-@pytest.fixture(params=["csv", "datapanel"])
+class SimpleModel(Model):
+    def _set_model(self):
+        self.layer = nn.Linear(in_features=self.config["in_features"], out_features=2)
+
+
+@pytest.fixture(params=["csv", "datapanel", "model", "yaml"])
 def artifact(request):
     artifact_type = request.param
 
@@ -24,12 +37,18 @@ def artifact(request):
         return DataPanelArtifact.from_data(
             mk.DataPanel({"a": np.arange(5), "b": np.ones(5)}), artifact_id=artifact_id
         )
+    elif artifact_type == "model":
+        return ModelArtifact.from_data(
+            SimpleModel({"in_features": 4}), artifact_id=artifact_id
+        )
+    elif artifact_type == "yaml":
+        return YAMLArtifact.from_data([1, 2, 3], artifact_id=artifact_id)
     else:
         raise ValueError(f"Artifact type '{artifact_type}' not supported.")
 
 
 def is_data_equal(data1: Any, data2: Any) -> bool:
-    if not type(data1) == type(data2):
+    if not isinstance(data1, type(data2)):
         return False
 
     if isinstance(data1, pd.DataFrame):
@@ -40,16 +59,23 @@ def is_data_equal(data1: Any, data2: Any) -> bool:
                 return False
             if not (data1[col] == data2[col]).all():
                 return False
+    elif isinstance(data1, Model):
+        return (
+            data1.layer.weight == data2.layer.weight
+        ).all() and data1.config == data2.config
+    elif isinstance(data1, (list, dict)):
+        return data1 == data2
     else:
         raise ValueError(f"Data type '{type(data1)}' not supported.")
     return True
 
 
-def test_artifact_upload_download(artifact):
+def test_artifact_upload_download(set_tmp_bucket, artifact):
     data = artifact.load()
     uploaded = artifact.upload(force=True)
     assert uploaded
-    artifact.download(force=True)
+    downloaded = artifact.download(force=True)
+    assert downloaded
     assert is_data_equal(data, artifact.load())
 
     # check that upload without force does not upload
@@ -92,4 +118,22 @@ def test_upload_without_save_errors(artifact):
     with pytest.raises(ValueError) as excinfo:
         artifact.upload()
 
+    assert "Artifact" in str(excinfo.value)
+
+
+def test_from_data():
+    artifact = Artifact.from_data(pd.DataFrame({"a": np.arange(5), "b": np.ones(5)}))
+    assert isinstance(artifact, CSVArtifact)
+
+    artifact = Artifact.from_data(mk.DataPanel({"a": np.arange(5), "b": np.ones(5)}))
+    assert isinstance(artifact, DataPanelArtifact)
+
+    artifact = Artifact.from_data(SimpleModel({"in_features": 4}))
+    assert isinstance(artifact, ModelArtifact)
+
+    artifact = Artifact.from_data([1, 2, 3])
+    assert isinstance(artifact, YAMLArtifact)
+
+    with pytest.raises(ValueError) as excinfo:
+        Artifact.from_data(None)
     assert "Artifact" in str(excinfo.value)

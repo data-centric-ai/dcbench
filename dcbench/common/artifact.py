@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import uuid
@@ -62,12 +63,12 @@ class Artifact(ABC):
 
     In DCBench, each artifact is identified by a unique artifact ID. The only
     state that the :class:`Artifact` object must maintain is this ID (``self.id``).
-    Critically, the object does not hold the actual data in memory, making it
+    The object does not hold the actual data in memory, making it
     lightweight.
 
-    Different types of artifacts (e.g. a CSV file vs. a PyTorch model) have
-    corresponding subclasses of :class:`Artifact` (e.g. :class:`CSVArtifact`,
-    :class:`ModelArtifact`).
+    :class:`Artifact` is an abstract base class. Different types of artifacts (e.g. a
+    CSV file vs. a PyTorch model) have corresponding subclasses of :class:`Artifact`
+    (e.g. :class:`CSVArtifact`, :class:`ModelArtifact`).
 
     .. Tip::
         The vast majority of users should not call the :class:`Artifact`
@@ -127,6 +128,8 @@ class Artifact(ABC):
                 cls = CSVArtifact
             elif isinstance(data, Model):
                 cls = ModelArtifact
+            elif isinstance(data, (list, dict)):
+                cls = YAMLArtifact
             else:
                 raise ValueError(
                     f"No Artifact in dcbench for object of type {type(data)}"
@@ -181,7 +184,7 @@ class Artifact(ABC):
                 uplioaded. Defaults to None, in which case the artifact is uploaded to
                 the bucket speciried in the config file at config.public_bucket_name.
 
-        Returns:
+        Returns
             bool: True if artifact was uploaded, False otherwise.
         """
 
@@ -223,15 +226,21 @@ class Artifact(ABC):
         """
 
         if self.is_downloaded and not force:
+
             return False
 
         if self.isdir:
+            if self.is_downloaded:
+                shutil.rmtree(self.local_path)
             os.makedirs(self.local_path, exist_ok=True)
             tarball_path = self.local_path + ".tar.gz"
             urlretrieve(self.remote_url, tarball_path)
             subprocess.call(["tar", "-xzf", tarball_path, "-C", self.local_path])
+            os.remove(tarball_path)
 
         else:
+            if self.is_downloaded:
+                os.remove(self.local_path)
             os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
             urlretrieve(self.remote_url, self.local_path)
         return True
@@ -327,10 +336,10 @@ class YAMLArtifact(Artifact):
 
     def load(self) -> Any:
         self._ensure_downloaded()
-        return yaml.load(open(self.local_path), yaml=yaml.FullLoader)
+        return yaml.load(open(self.local_path), Loader=yaml.FullLoader)
 
     def save(self, data: Any) -> None:
-        return yaml.dump(data, open(self.local_path))
+        return yaml.dump(data, open(self.local_path, "w"))
 
 
 class DataPanelArtifact(Artifact):
@@ -418,9 +427,48 @@ class ArtifactSpec:
 
 
 class ArtifactContainer(ABC, Mapping, RowMixin):
+    """A container for a logical collection of :class:`Artifact`s. Each
+    ArtifactContainer is tagged by a dictionary of attributes (simple tags
+    describing the container).
+
+    :class:`ArtifactContainer` is an abstract base class, and should not be
+    instantiated directly. There are two main groups of :class:`ArtifactContainer`
+    subclasses:
+
+    #. :class:`dcbench.Problem` - A logical collection of :class:`Artifact`s and
+       attributes that correspond to a specific problem to be solved.
+       - Example subclasses: :class:`dcbench.SliceDiscoveryProblem`,
+         :class:`dcbench.BudgetCleanProblem`
+    #. :class:`dcbench.Solution` - A logical collection of :class:`Artifact`s and
+       attributes that correspond to a solution to a problem.
+       - Example subclasses: :class:`dcbench.SliceDiscoverySolution`,
+         :class:`dcbench.BudgetCleanSOlution`
+
+    A concrete (i.e. non-abstract) subclass of :class:`ArtifactContainer` must include
+    a specification for the artifacts it holds. For example, in the code block below
+    we include such a specification in the definition of a simple container that holds a
+    training dataset and a test dataset (see :class:`dcbench.SliceDiscoveryProblem`
+    for a real example):
+
+    .. code-block:: python
+
+        class DemoContainer(ArtifactContainer):
+            artifact_specs = {
+                "train_dataset": ArtifactSpec(
+                    artifact_type=CSVArtifact,
+                    description="A CSV containing training data."
+                ),
+                "test_dataset": ArtifactSpec(
+                    artifact_type=CSVArtifact,
+                    description="A CSV containing test data."
+                ),
+            }
+            task_id = "demo"
+
+    """
 
     artifact_specs: Mapping[str, ArtifactSpec]
-    task_id: str = "none"
+    task_id: str = "demo"
     container_type: str
 
     def __init__(
@@ -444,48 +492,74 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
         attributes: Mapping[str, BASIC_TYPE] = None,
         container_id: str = None,
     ):
+        """"""
         if container_id is None:
             container_id = uuid.uuid4().hex
         container = cls(id=container_id, artifacts=artifacts, attributes=attributes)
         return container
 
-    def __getitem__(self, key):
-        artifact = self.artifacts.__getitem__(key)
-        if not artifact.is_downloaded:
-            artifact.download()
-        return self.artifacts.__getitem__(key).load()
-
-    def __iter__(self):
-        return self.artifacts.__iter__()
-
-    def __len__(self):
-        return self.artifacts.__len__()
-
-    def __getattr__(self, k: str) -> Any:
-        try:
-            return self.attributes[k]
-        except KeyError:
-            raise AttributeError(k)
-
     @property
     def is_downloaded(self) -> bool:
+        """Checks if all of the artifacts in the container are downloaded to the local
+        directory specified in the config file at ``config.local_dir``.
+
+        Returns:
+            bool: True if artifact is downloaded, False otherwise.
+        """
         return all(x.is_downloaded for x in self.artifacts.values())
 
     @property
     def is_uploaded(self) -> bool:
+        """Checks if all of the artifacts in the container are uploaded to the GCS
+        bucket specified in the config file at ``config.public_bucket_name``.
+
+        Returns:
+            bool: True if artifact is uploaded, False otherwise.
+        """
         return all(x.is_uploaded for x in self.artifacts.values())
 
     def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
+        """Uploads all of the artifacts in the container to a GCS bucket, skipping
+        artifacts that are already uploaded.
+
+        Args:
+            force (bool, optional): Force upload even if an artifact is already
+                uploaded. Defaults to False.
+            bucket (storage.Bucket, optional): The GCS bucket to which the artifacts are
+                uploaded. Defaults to None, in which case the artifact is uploaded to
+                the bucket speciried in the config file at config.public_bucket_name.
+
+        Returns:
+            bool: True if any artifacts were uploaded, False otherwise.
+        """
         if bucket is None:
             client = storage.Client()
             bucket = client.get_bucket(config.public_bucket_name)
 
-        for artifact in self.artifacts.values():
-            artifact.upload(force=force, bucket=bucket)
+        return any(
+            [
+                artifact.upload(force=force, bucket=bucket)
+                for artifact in self.artifacts.values()
+            ]
+        )
 
     def download(self, force: bool = False) -> bool:
-        for artifact in self.artifacts.values():
-            artifact.download(force=force)
+        """Downloads artifacts in the container from the GCS bucket specified in the
+        config file at ``config.public_bucket_name`` to the local directory specified
+        in the config file at ``config.local_dir``. The relative path to the
+        artifact within that directory is ``self.path``, which by default is
+        just the artifact ID with the default extension.
+
+        Args:
+            force (bool, optional): Force download even if an artifact is already
+             downloaded. Defaults to False.
+
+        Returns:
+            bool: True if any artifacts were downloaded, False otherwise.
+        """
+        return any(
+            [artifact.download(force=force) for artifact in self.artifacts.values()]
+        )
 
     def _create_artifacts(self, artifacts: Mapping[str, Artifact]):
         return {
@@ -504,6 +578,61 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
             for name, artifact in artifacts.items()
         }
 
+    @staticmethod
+    def from_yaml(loader: yaml.Loader, node):
+        """This function is called by the YAML loader to convert a YAML node
+        into an :class:`ArtifactContainer` object.
+
+        It should not be called directly.
+        """
+        data = loader.construct_mapping(node, deep=True)
+        return data["class"](
+            id=data["container_id"],
+            artifacts=data["artifacts"],
+            attributes=data["attributes"],
+        )
+
+    @staticmethod
+    def to_yaml(dumper: yaml.Dumper, data: ArtifactContainer):
+        """This function is called by the YAML dumper to convert an
+        :class:`ArtifactContainer` object into a YAML node.
+
+        It should not be called directly.
+        """
+        data = {
+            "class": type(data),
+            "container_id": data.id,
+            "attributes": data._attributes,
+            "artifacts": data.artifacts,
+        }
+        return dumper.represent_mapping("!ArtifactContainer", data)
+
+    # Provide dict interface for accessing artifacts by name
+    def __getitem__(self, key):
+        artifact = self.artifacts.__getitem__(key)
+        if not artifact.is_downloaded:
+            artifact.download()
+        return self.artifacts.__getitem__(key).load()
+
+    def __iter__(self):
+        return self.artifacts.__iter__()
+
+    def __len__(self):
+        return self.artifacts.__len__()
+
+    def __getattr__(self, k: str) -> Any:
+        try:
+            return self.attributes[k]
+        except KeyError:
+            raise AttributeError(k)
+
+    def __repr__(self):
+        artifacts = {k: v.__class__.__name__ for k, v in self.artifacts.items()}
+        return (
+            f"{self.__class__.__name__}(artifacts={artifacts}, "
+            f"attributes={self.attributes})"
+        )
+
     @classmethod
     def _check_artifact_specs(cls, artifacts: Mapping[str, Artifact]):
         for name, artifact in artifacts.items():
@@ -520,32 +649,6 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
                     f" {cls.__name__} expects an Artifact of type"
                     f" {cls.artifact_specs[name].artifact_type}."
                 )
-
-    @staticmethod
-    def from_yaml(loader: yaml.Loader, node):
-        data = loader.construct_mapping(node, deep=True)
-        return data["class"](
-            id=data["container_id"],
-            artifacts=data["artifacts"],
-            attributes=data["attributes"],
-        )
-
-    @staticmethod
-    def to_yaml(dumper: yaml.Dumper, data: ArtifactContainer):
-        data = {
-            "class": type(data),
-            "container_id": data.id,
-            "attributes": data._attributes,
-            "artifacts": data.artifacts,
-        }
-        return dumper.represent_mapping("!ArtifactContainer", data)
-
-    def __repr__(self):
-        artifacts = {k: v.__class__.__name__ for k, v in self.artifacts.items()}
-        return (
-            f"{self.__class__.__name__}(artifacts={artifacts}, "
-            f"attributes={self.attributes})"
-        )
 
 
 yaml.add_multi_representer(ArtifactContainer, ArtifactContainer.to_yaml)

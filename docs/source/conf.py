@@ -44,6 +44,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc.typehints",
     "sphinx.ext.autosummary",
+    "sphinx.ext.autosectionlabel",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinx_rtd_theme",
@@ -51,6 +52,9 @@ extensions = [
     "recommonmark",
 ]
 autodoc_typehints = "description"
+
+# useful for when you have multiple headers with the same name
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

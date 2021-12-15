@@ -13,10 +13,15 @@ if TYPE_CHECKING:
 
 
 class Problem(ArtifactContainer):
+    """A logical collection of :class:`Artifact`s and "attributes" that correspond to a
+    specific problem to be solved.
+
+    See the walkthrough section on :ref:`problem-intro` for more information.
+    """
 
     container_type: str = "problem"
 
-    # these class properites must be filled in by problem subclasses
+    # these class properties must be filled in by problem subclasses
     name: str
     summary: str
     task_id: str
@@ -24,11 +29,11 @@ class Problem(ArtifactContainer):
 
     @abstractmethod
     def solve(self, **kwargs: Any) -> Solution:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def evaluate(self, solution: Solution) -> Result:
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class ProblemTable(Table):
