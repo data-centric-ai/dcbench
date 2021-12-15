@@ -34,6 +34,8 @@ it easy to download data, run evaluations, and compare methods.
 
     pip install dcbench
 
+.. _task-intro:
+
 
 ``Task``
 ~~~~~~~~~~~~

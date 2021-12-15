@@ -7,7 +7,8 @@ import meerkat as mk
 import pandas as pd
 
 from dcbench.common import Problem, Solution, Task
-from dcbench.common.artifact import ArtifactSpec, DataPanelArtifact, YAMLArtifact
+from dcbench.common.artifact import DataPanelArtifact, YAMLArtifact
+from dcbench.common.artifact_container import ArtifactSpec
 
 
 class MiniDataSolution(Solution):

@@ -16,6 +16,7 @@ from dcbench.common.artifact import (
     ModelArtifact,
     YAMLArtifact,
 )
+from dcbench.common.artifact_container import ArtifactSpec
 from dcbench.common.modeling import Model
 
 

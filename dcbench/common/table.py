@@ -1,36 +1,72 @@
 import copy
+from dataclasses import dataclass
 from itertools import chain
 from typing import Dict, Iterator, Mapping, Optional, Sequence, Union
 
 import pandas as pd
 
-BASIC_TYPE = Union[int, float, str, bool]
+Attribute = Union[int, float, str, bool]
+
+
+@dataclass
+class AttributeSpec:
+    description: str
+    attribute_type: type
+    optional: bool = False
 
 
 class RowMixin:
-    def __init__(self, id: str, attributes: Mapping[str, BASIC_TYPE] = None):
+
+    attribute_specs: Mapping[str, AttributeSpec]
+
+    def __init__(self, id: str, attributes: Mapping[str, Attribute] = None):
         self.id = id
         self._attributes = attributes
 
     @property
-    def attributes(self) -> Optional[Mapping[str, BASIC_TYPE]]:
+    def attributes(self) -> Optional[Mapping[str, Attribute]]:
         return self._attributes
 
     @attributes.setter
-    def attributes(self, value: Mapping[str, BASIC_TYPE]):
+    def attributes(self, value: Mapping[str, Attribute]):
+        self._check_attribute_specs(value)
         self._attributes = value
+
+    @classmethod
+    def _check_attribute_specs(cls, attributes: Mapping[str, Attribute]):
+        for name, attribute in attributes.items():
+            if name not in cls.attribute_specs:
+                raise ValueError(
+                    f"Passed attribute name '{name}', but the specification for"
+                    f" {cls.__name__} doesn't include it."
+                )
+
+            if not isinstance(attribute, cls.attribute_specs[name].attribute_type):
+                raise ValueError(
+                    f"Passed an attribute of type {type(attribute)} to {cls.__name__}"
+                    f" for the attribute named '{name}'. The specification for"
+                    f" {cls.__name__} expects an attribute of type"
+                    f" {cls.attribute_specs[name].attribute_type}."
+                )
+        for name, attribute_spec in cls.attribute_specs.items():
+            if attribute_spec.optional:
+                continue
+            if name not in attributes:
+                raise ValueError(
+                    f"Must pass required attribute with key {name} to {cls.__name__}."
+                )
 
 
 class RowUnion(RowMixin):
     def __init__(self, id: str, elements: Sequence[RowMixin]):
         self._elements = elements
-        attributes: Dict[str, BASIC_TYPE] = {}
+        attributes: Dict[str, Attribute] = {}
         for element in reversed(elements):
             attributes.update(element.attributes)
         super().__init__(id, attributes=attributes)
 
 
-def predicate(a: BASIC_TYPE, b: Union[BASIC_TYPE, slice, Sequence[BASIC_TYPE]]) -> bool:
+def predicate(a: Attribute, b: Union[Attribute, slice, Sequence[Attribute]]) -> bool:
     if isinstance(b, slice):
         return (b.start is not None and a >= b.start) and (
             b.stop is not None and a < b.stop
@@ -66,9 +102,7 @@ class Table(Mapping[str, RowMixin]):
             {k: v.attributes for k, v in self._data.items()}, orient="index"
         )
 
-    def where(
-        self, **kwargs: Union[BASIC_TYPE, slice, Sequence[BASIC_TYPE]]
-    ) -> "Table":
+    def where(self, **kwargs: Union[Attribute, slice, Sequence[Attribute]]) -> "Table":
         result_data = [
             item
             for item in self._data.values()

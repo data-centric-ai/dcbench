@@ -4,11 +4,11 @@ import meerkat as mk
 
 from dcbench.common import Problem, Solution
 from dcbench.common.artifact import (
-    ArtifactSpec,
     DataPanelArtifact,
     ModelArtifact,
     VisionDatasetArtifact,
 )
+from dcbench.common.artifact_container import ArtifactSpec
 
 from .metrics import compute_metrics
 
@@ -77,7 +77,7 @@ class SliceDiscoveryProblem(Problem):
                 "`id` and `pred_slices`"
             )
 
-        return SliceDiscoverySolution.from_artifacts(
+        return SliceDiscoverySolution(
             artifacts={"pred_slices": pred_slices_dp},
             attributes={"problem_id": self.id},
         )

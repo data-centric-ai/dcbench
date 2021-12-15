@@ -6,7 +6,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
 from dcbench.common import Problem, Result, Solution
-from dcbench.common.artifact import ArtifactSpec, CSVArtifact
+from dcbench.common.artifact import CSVArtifact
+from dcbench.common.artifact_container import ArtifactSpec
 
 from .common import Preprocessor
 

@@ -12,7 +12,7 @@ from dcbench.common.problem import ProblemTable
 from dcbench.common.table import RowMixin, Table
 from dcbench.config import config
 
-from .artifact import ArtifactContainer
+from .artifact_container import ArtifactContainer
 
 storage = LazyLoader("google.cloud.storage")
 

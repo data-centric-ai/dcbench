@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from .artifact import ArtifactContainer
+from .artifact_container import ArtifactContainer
 from .result import Result
 from .table import Table
 

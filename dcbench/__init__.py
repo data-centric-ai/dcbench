@@ -11,9 +11,9 @@ from .common.artifact import (
     YAMLArtifact,
 )
 from .config import config
-from .tasks.budgetclean import BudgetcleanProblem
-from .tasks.minidata import MiniDataProblem
-from .tasks.slice_discovery import SliceDiscoveryProblem
+from .tasks.budgetclean import BudgetcleanProblem, BudgetcleanSolution
+from .tasks.minidata import MiniDataProblem, MiniDataSolution
+from .tasks.slice_discovery import SliceDiscoveryProblem, SliceDiscoverySolution
 
 __all__ = [
     "Artifact",
@@ -22,6 +22,9 @@ __all__ = [
     "BudgetcleanProblem",
     "MiniDataProblem",
     "SliceDiscoveryProblem",
+    "BudgetcleanSolution",
+    "MiniDataSolution",
+    "SliceDiscoverySolution",
     "Task",
     "ModelArtifact",
     "YAMLArtifact",
