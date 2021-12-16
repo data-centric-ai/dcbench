@@ -204,6 +204,8 @@ class Artifact(ABC):
         else:
             blob = bucket.blob(self.path)
             blob.upload_from_filename(self.local_path)
+            blob.metadata = {"Cache-Control": "private, max-age=0, no-transform"}
+            blob.patch()
         return True
 
     def download(self, force: bool = False) -> bool:
@@ -218,6 +220,16 @@ class Artifact(ABC):
 
         Returns:
             bool: True if artifact was downloaded, False otherwise.
+
+        .. warning::
+            By default, the GCS cache on public urls has a max-age up to an hour.
+            Therefore, when updating an existin artifacts, changes may not be
+            immediately reflected in subsequent downloads.
+
+            See `here
+            <https://stackoverflow.com/questions/62897641/google-cloud-storage-public-ob
+            ject-url-e-super-slow-updating>`_
+            for more details.
         """
 
         if self.is_downloaded and not force:

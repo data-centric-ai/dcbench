@@ -1,5 +1,3 @@
-import builtins
-
 import meerkat as mk
 import numpy as np
 import pandas as pd
@@ -8,6 +6,7 @@ import yaml
 
 from dcbench.common.artifact import Artifact, CSVArtifact, DataPanelArtifact
 from dcbench.common.artifact_container import ArtifactContainer, ArtifactSpec
+from dcbench.common.table import AttributeSpec
 
 from .test_artifact import is_data_equal
 
@@ -20,6 +19,11 @@ class SimpleContainer(ArtifactContainer):
         "dp2": ArtifactSpec(
             "Description of datapanel artifact", DataPanelArtifact, optional=True
         ),
+    }
+    attribute_specs = {
+        "test_attr": AttributeSpec(
+            description="A test attribute", attribute_type=int, optional=True
+        )
     }
     task_id = "test_task"
     container_type = "test_container_type"
@@ -41,6 +45,9 @@ def container():
                 pd.DataFrame({"a": np.arange(5), "b": np.ones(5)}),
                 artifact_id="csv2",
             ),
+        },
+        attributes={
+            "test_attr": 5,
         },
         container_id="test_container",
     )
@@ -104,6 +111,7 @@ def test_artifact_container_invalid_artifact(container):
 @pytest.mark.parametrize("use_force", [True, False])
 def test_artifact_container_download(monkeypatch, container, use_force: bool):
     downloads = []
+
     # mock the download function
     def mock_download(self, force: str = True):
         if not use_force:
@@ -126,6 +134,7 @@ def test_artifact_container_download(monkeypatch, container, use_force: bool):
 @pytest.mark.parametrize("use_force", [True, False])
 def test_artifact_container_upload(monkeypatch, container, use_force: bool):
     uploads = []
+
     # mock the upload function
     def mock_upload(self, force: str = False, bucket: str = None):
         if not force:
@@ -220,3 +229,10 @@ def test_artifact_container_getitem(container):
 def test_artifact_container_iter(container):
 
     assert [key for key in container] == ["csv1", "dp1", "csv2"]
+
+
+def test_attribute_access(container):
+    assert container.test_attr == 5
+
+    with pytest.raises(AttributeError):
+        container.nonexistent_attr

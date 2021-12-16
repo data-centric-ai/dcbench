@@ -9,6 +9,7 @@ from dcbench.common.artifact import (
     VisionDatasetArtifact,
 )
 from dcbench.common.artifact_container import ArtifactSpec
+from dcbench.common.table import AttributeSpec
 
 from .metrics import compute_metrics
 
@@ -20,6 +21,13 @@ class SliceDiscoverySolution(Solution):
             artifact_type=DataPanelArtifact,
             description="A DataPanel of predicted slice labels with columns `id`"
             " and `pred_slices`.",
+        ),
+    }
+
+    attribute_specs = {
+        "problem_id": AttributeSpec(
+            description="A unique identifier for this problem.",
+            attribute_type=str,
         ),
     }
 
@@ -65,6 +73,33 @@ class SliceDiscoveryProblem(Problem):
         "clip": ArtifactSpec(
             artifact_type=DataPanelArtifact,
             description="A DataPanel of the image embeddings from OpenAI's CLIP model",
+        ),
+    }
+
+    attribute_specs = {
+        "n_pred_slices": AttributeSpec(
+            description="The number of slice predictions that each slice discovery "
+            "method can return.",
+            attribute_type=int,
+        ),
+        "slice_category": AttributeSpec(
+            description="The type of slice .", attribute_type=str
+        ),
+        "target_name": AttributeSpec(
+            description="The name of the target column in the dataset.",
+            attribute_type=str,
+        ),
+        "dataset": AttributeSpec(
+            description="The name of the dataset being audited.",
+            attribute_type=str,
+        ),
+        "alpha": AttributeSpec(
+            description="The alpha parameter for the AUC metric.",
+            attribute_type=float,
+        ),
+        "slice_names": AttributeSpec(
+            description="The names of the slices in the dataset.",
+            attribute_type=list,
         ),
     }
 

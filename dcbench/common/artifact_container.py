@@ -5,7 +5,7 @@ import uuid
 from abc import ABC
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Union
+from typing import Any
 
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
@@ -13,14 +13,10 @@ from meerkat.tools.lazy_loader import LazyLoader
 import dcbench.constants as constants
 from dcbench.config import config
 
-from .table import AttributeSpec, RowMixin
+from .artifact import Artifact
+from .table import Attribute, AttributeSpec, RowMixin
 
 storage = LazyLoader("google.cloud.storage")
-
-
-from .artifact import Artifact
-
-PRIMITIVE_TYPE = Union[int, float, str, bool]
 
 
 @dataclass
@@ -49,6 +45,27 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
             :class:`AttributeSpec`. Defaults to None.
         container_id (str, optional): The ID of the container. Defaults to None, in
             which case a UUID is generated.
+
+    Attributes:
+        artifacts (Dict[str, Artifact]): A dictionary of artifacts, indexed by name.
+
+            .. Tip::
+                We can use the index operator directly on :class:`ArtifactContainer`
+                objects to both fetch the artifact, download it if necessary, and load
+                it into memory. For example, to load the artifact ``"data"`` into
+                memory from a container ``container``, we can simply call
+                ``container["data"]``, which is equivalent to calling
+                ``container.artifacts["data"].download()`` followed by
+                ``container.artifacts["data"].load()``.
+
+        attributes (Dict[str, Attribute]): A dictionary of attributes, indexed by
+            name.
+
+            .. Tip:: Accessing attributes
+                Atttributes can be accessed via a dot-notation (as long as the attribute
+                name does not conflict). For example, to access the attribute ``"data"``
+                in a container ``container``, we can simply call ``container.data``.
+
 
     Notes
     -----
@@ -110,7 +127,7 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
     def __init__(
         self,
         artifacts: Mapping[str, Artifact],
-        attributes: Mapping[str, PRIMITIVE_TYPE] = None,
+        attributes: Mapping[str, Attribute] = None,
         container_id: str = None,
     ):
         if container_id is None:

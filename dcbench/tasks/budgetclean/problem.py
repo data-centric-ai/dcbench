@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from dcbench.common import Problem, Result, Solution
 from dcbench.common.artifact import CSVArtifact
 from dcbench.common.artifact_container import ArtifactSpec
+from dcbench.common.table import AttributeSpec
 
 from .common import Preprocessor
 
@@ -55,6 +56,25 @@ class BudgetcleanProblem(Problem):
         ),
         "y_test": ArtifactSpec(
             artifact_type=CSVArtifact, description="Labels of the test dataset."
+        ),
+    }
+
+    attribute_specs = {
+        "budget": AttributeSpec(
+            attribute_type=float,
+            description="TODO",
+        ),
+        "dataset": AttributeSpec(
+            attribute_type=str,
+            description="TODO",
+        ),
+        "mode": AttributeSpec(
+            attribute_type=str,
+            description="TODO",
+        ),
+        "model": AttributeSpec(
+            attribute_type=str,
+            description="TODO",
         ),
     }
 

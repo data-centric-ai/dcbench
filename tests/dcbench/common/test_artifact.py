@@ -6,6 +6,7 @@ import meerkat as mk
 import numpy as np
 import pandas as pd
 import pytest
+import torch
 import torch.nn as nn
 import yaml
 
@@ -14,14 +15,15 @@ from dcbench.common.artifact import (
     CSVArtifact,
     DataPanelArtifact,
     ModelArtifact,
+    VisionDatasetArtifact,
     YAMLArtifact,
 )
-from dcbench.common.artifact_container import ArtifactSpec
 from dcbench.common.modeling import Model
 
 
 class SimpleModel(Model):
     def _set_model(self):
+        torch.manual_seed(0)
         self.layer = nn.Linear(in_features=self.config["in_features"], out_features=2)
 
 
@@ -29,7 +31,7 @@ class SimpleModel(Model):
 def artifact(request):
     artifact_type = request.param
 
-    artifact_id = f"test_{artifact_type}"
+    artifact_id = f"test_artifact_{artifact_type}"
     if artifact_type == "csv":
         return CSVArtifact.from_data(
             pd.DataFrame({"a": np.arange(5), "b": np.ones(5)}), artifact_id=artifact_id
@@ -75,6 +77,7 @@ def test_artifact_upload_download(set_tmp_bucket, artifact):
     data = artifact.load()
     uploaded = artifact.upload(force=True)
     assert uploaded
+
     downloaded = artifact.download(force=True)
     assert downloaded
     assert is_data_equal(data, artifact.load())
@@ -138,3 +141,64 @@ def test_from_data():
     with pytest.raises(ValueError) as excinfo:
         Artifact.from_data(None)
     assert "Artifact" in str(excinfo.value)
+
+
+def test_vision_dataset_artifact(monkeypatch):
+    downloads = []
+    celeba_dp = mk.DataPanel(
+        {
+            "image": np.random.rand(10, 3, 4, 4),
+            "identity": np.random.randint(0, 10, 10),
+            "split": np.random.randint(0, 10, 10),
+            "image_id": np.random.randint(0, 10, 10),
+        }
+    )
+
+    imagenet_dp = mk.DataPanel(
+        {
+            "image": np.random.rand(10, 3, 4, 4),
+            "name": np.random.randint(0, 10, 10),
+            "synset": np.random.randint(0, 10, 10),
+            "image_id": np.random.randint(0, 10, 10),
+        }
+    )
+
+    def mock_get(name, dataset_dir, **kwargs):
+        if name == "celeba":
+            downloads.append("celeba")
+            return celeba_dp.view()
+        elif name == "imagenet":
+            downloads.append("imagenet")
+            return imagenet_dp.view()
+
+    monkeypatch.setattr(mk.datasets, "get", mock_get)
+
+    artifact = VisionDatasetArtifact.from_name("celeba")
+    loaded_artifact = artifact.load()
+    assert isinstance(loaded_artifact, mk.DataPanel)
+    assert np.allclose(loaded_artifact["image"], celeba_dp["image"])
+    assert len(downloads) == 1
+
+    artifact.download()
+    loaded_artifact = artifact.load()
+    assert isinstance(loaded_artifact, mk.DataPanel)
+    assert np.allclose(loaded_artifact["image"], celeba_dp["image"])
+    assert len(downloads) == 2
+
+    artifact = VisionDatasetArtifact.from_name("imagenet")
+    loaded_artifact = artifact.load()
+    assert isinstance(loaded_artifact, mk.DataPanel)
+    assert np.allclose(loaded_artifact["image"], imagenet_dp["image"])
+    assert len(downloads) == 3
+
+    artifact.download()
+    loaded_artifact = artifact.load()
+    assert isinstance(loaded_artifact, mk.DataPanel)
+    assert np.allclose(loaded_artifact["image"], imagenet_dp["image"])
+    assert len(downloads) == 4
+
+    with pytest.raises(ValueError) as excinfo:
+        artifact = VisionDatasetArtifact.from_name("nonexistent")
+
+    assert "nonexistent" in str(excinfo.value) and "dcbench" in str(excinfo.value)
+    assert len(downloads) == 4
