@@ -65,6 +65,9 @@ jobs:
                 run: |
                     make docs
     Build:
+        permissions:
+            contents: 'read'
+            id-token: 'write'
         if:
             contains('
             refs/heads/main
@@ -77,11 +80,26 @@ jobs:
                 
         steps:
             -   uses: actions/checkout@v2
+
+            
     
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
                     python-version: ${{ matrix.python-version }}
+            
+
+            -   id: auth
+                uses: google-github-actions/auth@v0
+                with:
+                    workload_identity_provider: 'projects/419310667461/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+                    service_account: 'github-actions@hai-gcp-fine-grained.iam.gserviceaccount.com'
+
+            -   name: Set up gcloud Cloud SDK environment
+                uses: google-github-actions/setup-gcloud@v0.2.0
+
+            -   name: Use gcloud CLI
+                run: gcloud info
 
             -   uses: actions/cache@v2
                 with:

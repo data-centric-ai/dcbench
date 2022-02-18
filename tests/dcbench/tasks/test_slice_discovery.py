@@ -1,13 +1,20 @@
 import meerkat as mk
 import numpy as np
-from sklearn.metrics import roc_auc_score
-from torch import nn
+import torch.nn as nn
 
 import dcbench
-from dcbench.common.artifact import DataPanelArtifact
-from dcbench.common.table import Table
-from dcbench.common.task import Task
-from dcbench.tasks.slice_discovery.metrics import compute_metrics
+from dcbench import DataPanelArtifact, Table, Task
+from dcbench.tasks.slice_discovery.metrics import compute_metrics, roc_auc_score
+
+
+def test_solve():
+    slice_discovery = dcbench.tasks["slice_discovery"]
+
+    problem = slice_discovery.problems["p_117634"]
+
+    ids = problem["test_predictions"]["id"]
+    pred_slices = np.zeros((len(ids), 5))
+    problem.solve(pred_slices_dp=mk.DataPanel({"id": ids, "pred_slices": pred_slices}))
 
 
 def test_problems():

@@ -1,0 +1,16 @@
+[run]
+branch = True
+source = dcbench
+
+[report]
+exclude_lines =
+    if self.debug:
+    pragma: no cover
+    raise NotImplementedError
+    raise NotImplemented
+    if __name__ == .__main__.:
+ignore_errors = True
+omit =
+    tests/*
+    dcbench/tasks/budgetclean/*
+    setup.py

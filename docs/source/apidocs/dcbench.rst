@@ -13,6 +13,14 @@ Subpackages
 Submodules
 ----------
 
+dcbench.config module
+---------------------
+
+.. automodule:: dcbench.config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dcbench.constants module
 ------------------------
 

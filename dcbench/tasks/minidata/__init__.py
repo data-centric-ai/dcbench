@@ -1,12 +1,14 @@
-import meerkat as mk
 import os
-import pandas as pd
 import shutil
 import tempfile
 from typing import Any, Mapping, Sequence
 
+import meerkat as mk
+import pandas as pd
+
 from dcbench.common import Problem, Solution, Task
-from dcbench.common.artifact import ArtifactSpec, DataPanelArtifact, YAMLArtifact
+from dcbench.common.artifact import DataPanelArtifact, YAMLArtifact
+from dcbench.common.artifact_container import ArtifactSpec
 
 
 class MiniDataSolution(Solution):
@@ -51,14 +53,17 @@ class MiniDataProblem(Problem):
 
     task_id: str = "minidata"
 
-
     def solve(self, idx_selected: Any, **kwargs: Any) -> Solution:
 
         # Construct the solution object as a Pandas DataFrame.
         idx_selected_dp = None
         if isinstance(idx_selected, mk.DataPanel):
             idx_selected_dp = mk.DataPanel(
-                {"idx_selected": idx_selected[idx_selected.columns[0]].data.astype(bool)}
+                {
+                    "idx_selected": idx_selected[idx_selected.columns[0]].data.astype(
+                        bool
+                    )
+                }
             )
         elif isinstance(idx_selected, pd.DataFrame):
             idx_selected_dp = mk.DataPanel(
@@ -88,7 +93,6 @@ class MiniDataProblem(Problem):
         for k, v in self.attributes.items():
             solution.attributes[k] = v
         return solution
-
 
     def evaluate(self, solution: Solution):
         train_dp = self["train_data"]

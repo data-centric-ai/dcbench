@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import uuid
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
@@ -17,11 +16,8 @@ import pandas as pd
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
 
-import dcbench.constants as constants
 from dcbench.common.modeling import Model
 from dcbench.config import config
-
-from .table import RowMixin
 
 storage = LazyLoader("google.cloud.storage")
 torch = LazyLoader("torch")
@@ -57,42 +53,143 @@ def _url_exists(url: str):
 
 
 class Artifact(ABC):
+    """A pointer to a unit of data (e.g. a CSV file) that is stored locally on
+    disk and/or in a remote GCS bucket.
 
-    DEFAULT_EXT: str = ""
-    isdir: bool = False
+    In DCBench, each artifact is identified by a unique artifact ID. The only
+    state that the :class:`Artifact` object must maintain is this ID (``self.id``).
+    The object does not hold the actual data in memory, making it
+    lightweight.
 
-    def __init__(self, artifact_id: str, **kwargs) -> None:
-        self.path = f"{artifact_id}.{self.DEFAULT_EXT}"
-        self.id = artifact_id
-        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
-        super().__init__()
+    :class:`Artifact` is an abstract base class. Different types of artifacts (e.g. a
+    CSV file vs. a PyTorch model) have corresponding subclasses of :class:`Artifact`
+    (e.g. :class:`CSVArtifact`, :class:`ModelArtifact`).
+
+    .. Tip::
+        The vast majority of users should not call the :class:`Artifact`
+        constructor directly. Instead, they should either create a new artifact by
+        calling :meth:`from_data` or load an existing artifact from a YAML file.
+
+    The class provides utilities for accessing and managing a unit of data:
+
+    - Synchronizing the local and remote copies of a unit of data:
+      :meth:`upload`, :meth:`download`
+    - Loading the data into memory: :meth:`load`
+    - Creating new artifacts from in-memory data: :meth:`from_data`
+    - Serializing the pointer artifact so it can be shared:
+      :meth:`to_yaml`, :meth:`from_yaml`
+
+
+    Args:
+        artifact_id (str): The unique artifact ID.
+
+    Attributes:
+        id (str): The unique artifact ID.
+    """
+
+    @classmethod
+    def from_data(
+        cls, data: Union[mk.DataPanel, pd.DataFrame, Model], artifact_id: str = None
+    ) -> Artifact:
+        """Create a new artifact object from raw data and save the artifact to
+        disk in the local directory specified in the config file at
+        ``config.local_dir``.
+
+        .. tip::
+
+            When called on the abstract base class :class:`Artifact`, this method will
+            infer which artifact subclass to use. If you know exactly which artifact
+            class you'd like to use (e.g. :class:`DataPanelArtifact`), you should call
+            this classmethod on that subclass.
+
+        Args:
+            data (Union[mk.DataPanel, pd.DataFrame, Model]): The raw data that will be
+                saved to disk.
+            artifact_id (str, optional): . Defaults to None, in which case a UUID will
+                be generated and used.
+
+        Returns:
+            Artifact: A new artifact pointing to the :arg:`data` that was saved to disk.
+        """
+        if artifact_id is None:
+            artifact_id = uuid.uuid4().hex
+        # TODO ():At some point we should probably enforce that ids are unique
+
+        if cls is Artifact:
+            # if called on base class, infer which class to use
+            if isinstance(data, mk.DataPanel):
+                cls = DataPanelArtifact
+            elif isinstance(data, pd.DataFrame):
+                cls = CSVArtifact
+            elif isinstance(data, Model):
+                cls = ModelArtifact
+            elif isinstance(data, (list, dict)):
+                cls = YAMLArtifact
+            else:
+                raise ValueError(
+                    f"No Artifact in dcbench for object of type {type(data)}"
+                )
+
+        artifact = cls(artifact_id=artifact_id)
+        artifact.save(data)
+        return artifact
 
     @property
     def local_path(self) -> str:
+        """The local path to the artifact in the local directory specified in
+        the config file at ``config.local_dir``."""
         return os.path.join(config.local_dir, self.path)
 
     @property
     def remote_url(self) -> str:
+        """The URL of the artifact in the remote GCS bucket specified in the
+        config file at ``config.public_bucket_name``."""
         return os.path.join(
             config.public_remote_url, self.path + (".tar.gz" if self.isdir else "")
         )
 
     @property
     def is_downloaded(self) -> bool:
+        """Checks if artifact is downloaded to local directory specified in the
+        config file at ``config.local_dir``.
+
+        Returns:
+            bool: True if artifact is downloaded, False otherwise.
+        """
         return os.path.exists(self.local_path)
 
     @property
     def is_uploaded(self) -> bool:
+        """Checks if artifact is uploaded to GCS bucket specified in the config
+        file at ``config.public_bucket_name``.
+
+        Returns:
+            bool: True if artifact is uploaded, False otherwise.
+        """
         return _url_exists(self.remote_url)
 
-    def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
+    def upload(self, force: bool = False, bucket: "storage.Bucket" = None) -> bool:
+        """Uploads artifact to a GCS bucket at ``self.path``, which by default
+        is just the artifact ID with the default extension.
+
+        Args:
+            force (bool, optional): Force upload even if artifact is already uploaded.
+                Defaults to False.
+            bucket (storage.Bucket, optional): The GCS bucket to which the artifact is
+                uplioaded. Defaults to None, in which case the artifact is uploaded to
+                the bucket speciried in the config file at config.public_bucket_name.
+
+        Returns
+            bool: True if artifact was uploaded, False otherwise.
+        """
+
         if not os.path.exists(self.local_path):
             raise ValueError(
                 f"Could not find Artifact to upload at '{self.local_path}'. "
                 "Are you sure it is stored locally?"
             )
         if self.is_uploaded and not force:
-            return
+            return False
 
         if bucket is None:
             client = storage.Client()
@@ -107,66 +204,96 @@ class Artifact(ABC):
         else:
             blob = bucket.blob(self.path)
             blob.upload_from_filename(self.local_path)
+            blob.metadata = {"Cache-Control": "private, max-age=0, no-transform"}
+            blob.patch()
+        return True
 
-    def download(self, force: bool = False):
+    def download(self, force: bool = False) -> bool:
+        """Downloads artifact from GCS bucket to the local directory specified
+        in the config file at ``config.local_dir``. The relative path to the
+        artifact within that directory is ``self.path``, which by default is
+        just the artifact ID with the default extension.
+
+        Args:
+            force (bool, optional): Force download even if artifact is already
+             downloaded. Defaults to False.
+
+        Returns:
+            bool: True if artifact was downloaded, False otherwise.
+
+        .. warning::
+            By default, the GCS cache on public urls has a max-age up to an hour.
+            Therefore, when updating an existin artifacts, changes may not be
+            immediately reflected in subsequent downloads.
+
+            See `here
+            <https://stackoverflow.com/questions/62897641/google-cloud-storage-public-ob
+            ject-url-e-super-slow-updating>`_
+            for more details.
+        """
+
         if self.is_downloaded and not force:
-            return
+
+            return False
 
         if self.isdir:
+            if self.is_downloaded:
+                shutil.rmtree(self.local_path)
             os.makedirs(self.local_path, exist_ok=True)
             tarball_path = self.local_path + ".tar.gz"
             urlretrieve(self.remote_url, tarball_path)
             subprocess.call(["tar", "-xzf", tarball_path, "-C", self.local_path])
+            os.remove(tarball_path)
 
         else:
+            if self.is_downloaded:
+                os.remove(self.local_path)
             os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
             urlretrieve(self.remote_url, self.local_path)
+        return True
 
-    def _ensure_downloaded(self):
-        if not self.is_downloaded:
-            raise ValueError(
-                "Cannot load Artifact that has not been downloaded. "
-                "Call `artifact.download()`."
-            )
+    DEFAULT_EXT: str = ""
+    isdir: bool = False
 
     @abstractmethod
     def load(self) -> Any:
-        pass
+        """Load the artifact into memory from disk at ``self.local_path``."""
+        raise NotImplementedError()
 
     @abstractmethod
     def save(self, data: Any) -> None:
-        pass
+        """Save data to disk at ``self.local_path``."""
+        raise NotImplementedError()
 
-    @classmethod
-    def from_data(cls, data: Any, artifact_id: str = None):
-        if artifact_id is None:
-            artifact_id = uuid.uuid4().hex
-        # TODO ():At some point we should probably enforce that ids are unique
-
-        if cls is Artifact:
-            # if called on base class, infer which class to use
-            if isinstance(data, mk.DataPanel):
-                cls = DataPanelArtifact
-            elif isinstance(data, pd.DataFrame):
-                cls = CSVArtifact
-            elif isinstance(data, Model):
-                cls = ModelArtifact
-            else:
-                raise ValueError(
-                    f"No Artifact in dcbench for object of type {type(data)}"
-                )
-
-        artifact = cls(artifact_id=artifact_id)
-        artifact.save(data)
-        return artifact
+    def __init__(self, artifact_id: str, **kwargs) -> None:
+        """
+        .. warning::
+            In general, you should not instantiate an Artifact directly. Instead, use
+            :meth:`Artifact.from_data` to create an Artifact.
+        """
+        self.path = f"{artifact_id}.{self.DEFAULT_EXT}"
+        self.id = artifact_id
+        os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
+        super().__init__()
 
     @staticmethod
     def from_yaml(loader: yaml.Loader, node):
+        """This function is called by the YAML loader to convert a YAML node
+        into an Artifact object.
+
+        It should not be called directly.
+        """
         data = loader.construct_mapping(node, deep=True)
         return data["class"](artifact_id=data["artifact_id"])
 
     @staticmethod
     def to_yaml(dumper: yaml.Dumper, data: Artifact):
+        """This function is called by the YAML dumper to convert an Artifact
+        object into a YAML node.
+
+        It should not be called directly.
+        """
+
         data = {
             "artifact_id": data.id,
             "class": type(data),
@@ -174,8 +301,14 @@ class Artifact(ABC):
         node = dumper.represent_mapping("!Artifact", data)
         return node
 
+    def _ensure_downloaded(self):
+        if not self.is_downloaded:
+            raise ValueError(
+                "Cannot load `Artifact` that has not been downloaded. "
+                "First call `artifact.download()`."
+            )
 
-# need to use multi_representer to support
+
 yaml.add_multi_representer(Artifact, Artifact.to_yaml)
 yaml.add_constructor("!Artifact", Artifact.from_yaml)
 
@@ -185,6 +318,7 @@ class CSVArtifact(Artifact):
     DEFAULT_EXT: str = "csv"
 
     def load(self) -> pd.DataFrame:
+
         self._ensure_downloaded()
         data = pd.read_csv(self.local_path, index_col=0)
 
@@ -207,12 +341,12 @@ class YAMLArtifact(Artifact):
 
     DEFAULT_EXT: str = "yaml"
 
-    def load(self) -> pd.DataFrame:
+    def load(self) -> Any:
         self._ensure_downloaded()
-        return yaml.load(open(self.local_path), yaml=yaml.FullLoader)
+        return yaml.load(open(self.local_path), Loader=yaml.FullLoader)
 
     def save(self, data: Any) -> None:
-        return yaml.dump(data, open(self.local_path))
+        return yaml.dump(data, open(self.local_path, "w"))
 
 
 class DataPanelArtifact(Artifact):
@@ -256,7 +390,9 @@ class VisionDatasetArtifact(DataPanelArtifact):
         if self.id == "celeba":
             dp = mk.datasets.get(self.id, dataset_dir=config.celeba_dir)
         elif self.id == "imagenet":
-            dp = mk.datasets.get(self.id, dataset_dir=config.imagenet_dir, download=False)
+            dp = mk.datasets.get(
+                self.id, dataset_dir=config.imagenet_dir, download=False
+            )
         else:
             raise ValueError(f"No dataset named '{self.id}' supported by dcbench.")
 
@@ -286,147 +422,3 @@ class ModelArtifact(Artifact):
             },
             self.local_path,
         )
-
-
-BASIC_TYPE = Union[int, float, str, bool]
-
-
-@dataclass
-class ArtifactSpec:
-    description: str
-    artifact_type: type
-
-
-class ArtifactContainer(ABC, Mapping, RowMixin):
-
-    artifact_specs: Mapping[str, ArtifactSpec]
-    task_id: str = "none"
-    container_type: str
-
-    def __init__(
-        self,
-        id: str,
-        artifacts: Mapping[str, Artifact],
-        attributes: Mapping[str, BASIC_TYPE] = None,
-    ):
-        super().__init__(id=id)
-        artifacts = self._create_artifacts(artifacts=artifacts)
-        self._check_artifact_specs(artifacts=artifacts)
-        self.artifacts = artifacts
-        if attributes is None:
-            attributes = {}
-        self._attributes = attributes
-
-    @classmethod
-    def from_artifacts(
-        cls,
-        artifacts: Mapping[str, Artifact],
-        attributes: Mapping[str, BASIC_TYPE] = None,
-        container_id: str = None,
-    ):
-        if container_id is None:
-            container_id = uuid.uuid4().hex
-        container = cls(id=container_id, artifacts=artifacts, attributes=attributes)
-        return container
-
-    def __getitem__(self, key):
-        artifact = self.artifacts.__getitem__(key)
-        if not artifact.is_downloaded:
-            artifact.download()
-        return self.artifacts.__getitem__(key).load()
-
-    def __iter__(self):
-        return self.artifacts.__iter__()
-
-    def __len__(self):
-        return self.artifacts.__len__()
-
-    def __getattr__(self, k: str) -> Any:
-        try:
-            return self.attributes[k]
-        except KeyError:
-            raise AttributeError(k)
-
-    @property
-    def is_downloaded(self) -> bool:
-        return all(x.is_downloaded for x in self.artifacts.values())
-
-    @property
-    def is_uploaded(self) -> bool:
-        return all(x.is_uploaded for x in self.artifacts.values())
-
-    def upload(self, force: bool = False, bucket: "storage.Bucket" = None):
-        if bucket is None:
-            client = storage.Client()
-            bucket = client.get_bucket(config.public_bucket_name)
-
-        for artifact in self.artifacts.values():
-            artifact.upload(force=force, bucket=bucket)
-
-    def download(self, force: bool = False) -> bool:
-        for artifact in self.artifacts.values():
-            artifact.download(force=force)
-
-    def _create_artifacts(self, artifacts: Mapping[str, Artifact]):
-        return {
-            name: artifact
-            if isinstance(artifact, Artifact)
-            else Artifact.from_data(
-                data=artifact,
-                artifact_id=os.path.join(
-                    self.task_id,
-                    self.container_type,
-                    constants.ARTIFACTS_DIR,
-                    self.id,
-                    name,
-                ),
-            )
-            for name, artifact in artifacts.items()
-        }
-
-    @classmethod
-    def _check_artifact_specs(cls, artifacts: Mapping[str, Artifact]):
-        for name, artifact in artifacts.items():
-            if name not in cls.artifact_specs:
-                raise ValueError(
-                    f"Passed artifact name '{name}', but the specification for"
-                    f" {cls.__name__} doesn't include it."
-                )
-
-            if not isinstance(artifact, cls.artifact_specs[name].artifact_type):
-                raise ValueError(
-                    f"Passed an artifact of type {type(artifact)} to {cls.__name__}"
-                    f" for the artifact named '{name}'. The specification for"
-                    f" {cls.__name__} expects an Artifact of type"
-                    f" {cls.artifact_specs[name].artifact_type}."
-                )
-
-    @staticmethod
-    def from_yaml(loader: yaml.Loader, node):
-        data = loader.construct_mapping(node, deep=True)
-        return data["class"](
-            id=data["container_id"],
-            artifacts=data["artifacts"],
-            attributes=data["attributes"],
-        )
-
-    @staticmethod
-    def to_yaml(dumper: yaml.Dumper, data: ArtifactContainer):
-        data = {
-            "class": type(data),
-            "container_id": data.id,
-            "attributes": data._attributes,
-            "artifacts": data.artifacts,
-        }
-        return dumper.represent_mapping("!ArtifactContainer", data)
-
-    def __repr__(self):
-        artifacts = {k: v.__class__.__name__ for k, v in self.artifacts.items()}
-        return (
-            f"{self.__class__.__name__}(artifacts={artifacts}, "
-            f"attributes={self.attributes})"
-        )
-
-
-yaml.add_multi_representer(ArtifactContainer, ArtifactContainer.to_yaml)
-yaml.add_constructor("!ArtifactContainer", ArtifactContainer.from_yaml)

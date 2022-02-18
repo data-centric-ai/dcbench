@@ -34,6 +34,8 @@ it easy to download data, run evaluations, and compare methods.
 
     pip install dcbench
 
+.. _task-intro:
+
 
 ``Task``
 ~~~~~~~~~~~~
@@ -47,6 +49,8 @@ You can explore the supported tasks in the documentation (:any:`tasks`) or via t
 
 
 In the ``dcbench`` API, each task is represented by a :class:`dcbench.Task` object that can be accessed by *task_id* (*e.g.* ``dcbench.slice_discovery``). These task objects hold metadata about the task and hold pointers to task-specific :class:`dcbench.Problem` and :class:`dcbench.Solution` subclasses, discussed below.  
+
+.. _problem-intro:
 
 ``Problem``
 ~~~~~~~~~~~~

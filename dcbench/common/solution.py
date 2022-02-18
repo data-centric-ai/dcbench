@@ -3,7 +3,7 @@ from typing import Iterator, Mapping
 
 from pandas import Series
 
-from .artifact import ArtifactContainer
+from .artifact_container import ArtifactContainer
 
 
 class Result(Mapping):
