@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Union
 from urllib.error import HTTPError
 from urllib.request import urlopen, urlretrieve
+import warnings
 
 import meerkat as mk
 import pandas as pd
@@ -189,6 +190,10 @@ class Artifact(ABC):
                 "Are you sure it is stored locally?"
             )
         if self.is_uploaded and not force:
+            warnings.warn(
+                f"Artifact {self.id} is not being re-uploaded."
+                "Set `force=True` to force upload."
+            )
             return False
 
         if bucket is None:
