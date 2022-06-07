@@ -52,6 +52,22 @@ def _url_exists(url: str):
     except HTTPError:
         return False
 
+def urlretrieve_with_retry(url: str, filename: str, max_retries: int=5):
+    """
+    Retry urlretrieve() if it fails.
+    """
+    for idx in range(max_retries):
+        try:
+            urlretrieve(url, filename)
+            return
+        except Exception as e:
+            warnings.warn(
+                f"Failed to download {url}: {e}\n"
+                f"Retrying {idx}/{max_retries}..."
+            )
+            continue
+    raise RuntimeError(f"Failed to download {url} after {max_retries} retries.")
+
 
 class Artifact(ABC):
     """A pointer to a unit of data (e.g. a CSV file) that is stored locally on
@@ -240,13 +256,12 @@ class Artifact(ABC):
         if self.is_downloaded and not force:
 
             return False
-
         if self.isdir:
             if self.is_downloaded:
                 shutil.rmtree(self.local_path)
             os.makedirs(self.local_path, exist_ok=True)
             tarball_path = self.local_path + ".tar.gz"
-            urlretrieve(self.remote_url, tarball_path)
+            urlretrieve_with_retry(self.remote_url, tarball_path)
             subprocess.call(["tar", "-xzf", tarball_path, "-C", self.local_path])
             os.remove(tarball_path)
 
@@ -254,7 +269,8 @@ class Artifact(ABC):
             if self.is_downloaded:
                 os.remove(self.local_path)
             os.makedirs(os.path.dirname(self.local_path), exist_ok=True)
-            urlretrieve(self.remote_url, self.local_path)
+            urlretrieve_with_retry(self.remote_url, self.local_path)
+
         return True
 
     DEFAULT_EXT: str = ""

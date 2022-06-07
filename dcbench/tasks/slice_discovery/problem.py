@@ -29,10 +29,31 @@ class SliceDiscoverySolution(Solution):
             description="A unique identifier for this problem.",
             attribute_type=str,
         ),
+        "slicer_class": AttributeSpec(
+            description="The ",
+            attribute_type=type,
+        ),
+        "slicer_config": AttributeSpec(
+            description="The configuration for the slicer.",
+            attribute_type=dict,
+        ),
+        "embedding_column": AttributeSpec(
+            description="The column name of the embedding.",
+            attribute_type=str,
+        ),
     }
 
     task_id: str = "slice_discovery"
 
+    @property
+    def problem(self):
+        from dcbench import tasks
+        return tasks["slice_discovery"].problems[self.problem_id]
+
+    def merge(self) -> mk.DataPanel:
+        return self["pred_slices"].merge(
+            self.problem.merge(split="test", slices=True), on="id", how="left"
+        )
 
 class SliceDiscoveryProblem(Problem):
 
@@ -104,6 +125,16 @@ class SliceDiscoveryProblem(Problem):
     }
 
     task_id: str = "slice_discovery"
+
+    def merge(self, split="val", slices: bool = False):
+        base_dataset = self["base_dataset"]
+        base_dataset = base_dataset[[c for c in base_dataset.columns if c != "split"]]
+        dp = self[f"{split}_predictions"].merge(
+            base_dataset, on="id", how="left"
+        )
+        if slices:
+            dp = dp.merge(self[f"{split}_slices"], on="id", how="left")
+        return dp
 
     def solve(self, pred_slices_dp: mk.DataPanel) -> SliceDiscoverySolution:
         if ("id" not in pred_slices_dp) or ("pred_slices" not in pred_slices_dp):
