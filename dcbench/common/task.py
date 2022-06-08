@@ -80,24 +80,6 @@ class Task(RowMixin):
         path = self.solution_set_path(set_id=set_id)
         return os.path.join(config.local_dir, path)
 
-    def write_solutions(self, containers: List[Solution], set_id: str = None):
-        ids = []
-        for container in containers:
-            assert isinstance(container, self.solution_class)
-            ids.append(container.id)
-
-        if len(set(ids)) != len(ids):
-            raise ValueError(
-                "Duplicate container ids in the containers passed to `write_solutions`."
-            )
-
-        path = self.local_solution_set_path(set_id=set_id)
-        if os.path.exists(path):
-            raise ValueError(f"Solution set with set_id {set_id} already exists.")
-
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        yaml.dump(containers, open(path, "w"))
-        return path
 
     def upload_problems(self, include_artifacts: bool = False, force: bool = True):
         """
@@ -159,13 +141,12 @@ class Task(RowMixin):
     def problems(self):
         return self._load_problems()
     
-    def solutions(self, set_id: str = None):
-        pass 
 
     @property
     def solution_sets(self):
-
-        return list(os.listdir(os.path.join(config.local_dir, self.task_id, "solution_sets")))
+        return list(os.listdir(
+            os.path.join(config.local_dir, self.task_id, "solution_sets")
+        ))
 
     def __repr__(self):
         return f'Task(task_id="{self.task_id}", name="{self.name}")'

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 dcbench-config.yaml
+slurm
 
 # C extensions
 *.so
