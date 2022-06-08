@@ -1,11 +1,11 @@
 from dcbench.common import Task
 
-from .baselines import confusion_sdm, domino_sdm
+#from .baselines import confusion_sdm, domino_sdm
 from .problem import SliceDiscoveryProblem, SliceDiscoverySolution
 
 __all__ = [
-    "confusion_sdm",
-    "domino_sdm",
+ #   "confusion_sdm",
+  #  "domino_sdm",
     "SliceDiscoveryProblem",
     "SliceDiscoverySolution",
 ]

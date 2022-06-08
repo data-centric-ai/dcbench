@@ -389,7 +389,7 @@ class VisionDatasetArtifact(DataPanelArtifact):
     isdir: bool = True
 
     COLUMN_SUBSETS = {
-        "celeba": ["id", "image", "identity", "split"],
+        "celeba": ["id", "image", "split"],
         "imagenet": ["id", "image", "name", "synset"],
     }
 

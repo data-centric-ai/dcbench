@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import List
 from urllib.request import urlretrieve
 import warnings
+import datetime
+import uuid
 
 import yaml
 from meerkat.tools.lazy_loader import LazyLoader
@@ -15,6 +17,8 @@ from dcbench.common.table import RowMixin, Table
 from dcbench.config import config
 
 from .artifact_container import ArtifactContainer
+from .solution import Solution
+from .problem import Problem
 
 storage = LazyLoader("google.cloud.storage")
 
@@ -46,7 +50,7 @@ class Task(RowMixin):
     def remote_problems_url(self):
         return os.path.join(config.public_remote_url, self.problems_path)
 
-    def write_problems(self, containers: List[ArtifactContainer], append: bool = True):
+    def write_problems(self, containers: List[Problem], append: bool = True):
         ids = []
         for container in containers:
             assert isinstance(container, self.problem_class)
@@ -65,6 +69,35 @@ class Task(RowMixin):
         os.makedirs(os.path.dirname(self.local_problems_path), exist_ok=True)
         yaml.dump(containers, open(self.local_problems_path, "w"))
         self._load_problems.cache_clear()
+
+    def solution_set_path(self, set_id: str = None):
+        if set_id is None:
+            # create unique id with today's date formatted like YY-MM-DD and a hash
+            set_id = f"{datetime.date.today():%y-%m-%d}-{str(uuid.uuid4())[:8]}"
+        return os.path.join(self.task_id, f"solution_sets/{set_id}/solutions.yaml")
+
+    def local_solution_set_path(self, set_id: str = None):
+        path = self.solution_set_path(set_id=set_id)
+        return os.path.join(config.local_dir, path)
+
+    def write_solutions(self, containers: List[Solution], set_id: str = None):
+        ids = []
+        for container in containers:
+            assert isinstance(container, self.solution_class)
+            ids.append(container.id)
+
+        if len(set(ids)) != len(ids):
+            raise ValueError(
+                "Duplicate container ids in the containers passed to `write_solutions`."
+            )
+
+        path = self.local_solution_set_path(set_id=set_id)
+        if os.path.exists(path):
+            raise ValueError(f"Solution set with set_id {set_id} already exists.")
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        yaml.dump(containers, open(path, "w"))
+        return path
 
     def upload_problems(self, include_artifacts: bool = False, force: bool = True):
         """
@@ -125,6 +158,14 @@ class Task(RowMixin):
     @property
     def problems(self):
         return self._load_problems()
+    
+    def solutions(self, set_id: str = None):
+        pass 
+
+    @property
+    def solution_sets(self):
+
+        return list(os.listdir(os.path.join(config.local_dir, self.task_id, "solution_sets")))
 
     def __repr__(self):
         return f'Task(task_id="{self.task_id}", name="{self.name}")'

@@ -11,7 +11,6 @@ from dcbench.common.artifact import (
 from dcbench.common.artifact_container import ArtifactSpec
 from dcbench.common.table import AttributeSpec
 
-from .metrics import compute_metrics
 
 
 class SliceDiscoverySolution(Solution):
@@ -148,7 +147,6 @@ class SliceDiscoveryProblem(Problem):
             attributes={"problem_id": self.id},
         )
 
-    def evaluate(self, solution: SliceDiscoverySolution) -> dict:
-        dp = mk.merge(self["test_slices"], solution["pred_slices"], on="id")
-        result = compute_metrics(dp["slices"], dp["pred_slices"])
-        return result[["precision_at_10", "precision_at_25", "auroc"]].mean().to_dict()
+
+    def evaluate(self):
+        pass

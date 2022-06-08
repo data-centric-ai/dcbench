@@ -1,88 +1,106 @@
+
+
+
+from typing import List, Tuple
+import meerkat as mk
 import numpy as np
-import pandas as pd
+import sklearn.metrics as skmetrics
+from domino.utils import unpack_args
 from scipy.stats import rankdata
-from sklearn.metrics import precision_score, recall_score, roc_auc_score
+import pandas as pd 
+from tqdm import tqdm
+
+from dcbench import SliceDiscoveryProblem, SliceDiscoverySolution
 
 
-def precision_at_k(slice: np.ndarray, pred_slice: np.ndarray, k: int = 25):
-    return precision_score(
-        slice, rankdata(-pred_slice, method="ordinal") <= k, zero_division=0
+def compute_metrics(solutions: List[SliceDiscoverySolution], run_id: int = None) -> Tuple[mk.DataPanel]:
+    global_metrics = []
+    slice_metrics = []
+    for solution in tqdm(solutions):
+        g, s = compute_solution_metrics(solution)
+        global_metrics.append(g)
+        slice_metrics.extend(s)
+    return mk.DataPanel(global_metrics), mk.DataPanel(slice_metrics)
+
+
+def compute_solution_metrics(
+    solution: SliceDiscoverySolution,
+):
+    metrics = _compute_metrics(
+        data=solution.merge(),
+        slice_target_column="slices",
+        slice_pred_column="slice_preds",
+        slice_prob_column="slice_probs",
+        slice_names=solution.problem.slice_names,
+    )
+    for row in metrics:
+        row["solution_id"] = solution.id
+        row["problem_id"] = solution.problem_id
+    return metrics
+
+
+def _compute_metrics(
+    data: mk.DataPanel,
+    slice_target_column: str,
+    slice_pred_column: str,
+    slice_prob_column: str,
+    slice_names: List[str],
+):
+    slice_targets, slice_preds, slice_probs = unpack_args(
+        data, slice_target_column, slice_pred_column, slice_prob_column
     )
 
+    # consider complements of slices
+    slice_preds = np.concatenate([slice_preds, 1 - slice_preds], axis=1)
+    slice_probs = np.concatenate([slice_probs, 1 - slice_probs], axis=1)
 
-def recall_at_k(slice: np.ndarray, pred_slice: np.ndarray, k: int = 25):
-    return recall_score(slice, rankdata(-pred_slice) <= k, zero_division=0)
-
-
-PRECISION_K = [10, 25, 100]
-RECALL_K = [50, 100, 200]
-
-
-def compute_metrics(slices: np.ndarray, pred_slices: np.ndarray) -> dict:
-    """[summary]
-
-    Args:
-        slices (np.ndarray): [description]
-        pred_slices (np.ndarray): [description]
-
-    Returns:
-        dict: [description]
-    """
-
-    pred_slice = pred_slices.argmax(axis=-1)
-    no_nan_preds = not np.isnan(pred_slices).any()
-
-    rows = []
-    for slice_idx in range(slices.shape[1]):
-
-        df = pd.DataFrame(
-            [
-                {
-                    "pred_slice_idx": pred_slice_idx,
-                    "slice_idx": slice_idx,
-                    "auroc": roc_auc_score(
-                        slices[:, slice_idx], pred_slices[:, pred_slice_idx]
-                    )
-                    if len(np.unique(slices[:, slice_idx])) > 1 and no_nan_preds
-                    else np.nan,
-                    **{
-                        f"precision_at_{k}": precision_at_k(
-                            slices[:, slice_idx],
-                            pred_slices[:, pred_slice_idx],
-                            k=k,
-                        )
-                        if len(np.unique(slices[:, slice_idx])) > 1 and no_nan_preds
-                        else np.nan
-                        for k in PRECISION_K
-                    },
-                    **{
-                        f"recall_at_{k}": recall_at_k(
-                            slices[:, slice_idx],
-                            pred_slices[:, pred_slice_idx],
-                            k=k,
-                        )
-                        if len(np.unique(slices[:, slice_idx])) > 1 and no_nan_preds
-                        else np.nan
-                        for k in RECALL_K
-                    },
-                    "recall": recall_score(
-                        slices[:, slice_idx],
-                        (pred_slice == pred_slice_idx).astype(int),
-                    )
-                    if no_nan_preds
-                    else np.nan,
-                    "precision": precision_score(
-                        slices[:, slice_idx],
-                        (pred_slice == pred_slice_idx).astype(int),
-                        zero_division=0,
-                    )
-                    if no_nan_preds
-                    else np.nan,
-                }
-                for pred_slice_idx in range(pred_slices.shape[1])
-            ]
+    def precision_at_k(slc: np.ndarray, pred_slice: np.ndarray, k: int = 25):
+        # don't need to check for zero division because we're taking the top_k
+        return skmetrics.precision_score(
+            slc, rankdata(-pred_slice, method="ordinal") <= k
         )
-        # take the predicted slice idx with the maximum auroc
-        rows.append(df.loc[df["auroc"].idxmax()].to_dict())
 
-    return pd.DataFrame(rows)
+    # compute mean response conditional on the slice and predicted slice_targets
+    def zero_fill_nan_and_infs(x: np.ndarray):
+        return np.nan_to_num(x, nan=0, posinf=0, neginf=0, copy=False)
+
+    metrics = []
+    for slice_idx in range(slice_targets.shape[1]):
+        slc = slice_targets[:, slice_idx]
+        slice_name = slice_names[slice_idx]
+        for pred_slice_idx in range(slice_preds.shape[1]):
+            slice_pred = slice_preds[:, pred_slice_idx]
+            slice_prob = slice_probs[:, pred_slice_idx]
+
+            metrics.append(
+                {
+                    "target_slice_idx": slice_idx,
+                    "target_slice_name": slice_name,
+                    "pred_slice_idx": pred_slice_idx,
+                    "average_precision": skmetrics.average_precision_score(
+                        y_true=slc, y_score=slice_prob
+                    ),
+                    "precision-at-10": precision_at_k(slc, slice_prob, k=10),
+                    "precision-at-25": precision_at_k(slc, slice_prob, k=25),
+                    **dict(
+                        zip(
+                            ["precision", "recall", "f1_score", "support"],
+                            skmetrics.precision_recall_fscore_support(
+                                y_true=slc,
+                                y_pred=slice_pred,
+                                average="binary",
+                                # note: if slc is empty, recall will be 0 and if pred
+                                # is empty precision will be 0
+                                zero_division=0,
+                            ),
+                        )
+                    ),
+                }
+            )
+
+    df = pd.DataFrame(metrics)
+    primary_metric = "average_precision"
+    slice_metrics = df.iloc[
+        df.groupby("target_slice_name")[primary_metric].idxmax().astype(int)
+    ]
+    return slice_metrics.to_dict("records")
