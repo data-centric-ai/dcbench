@@ -248,6 +248,10 @@ class ArtifactContainer(ABC, Mapping, RowMixin):
         return self.artifacts.__len__()
 
     def __getattr__(self, k: str) -> Any:
+        if k == "_attributes" or k == "attributes":
+            # avoids recursion error when unpickling an ArtifactContainer
+            raise AttributeError(k)
+        
         try:
             return self.attributes[k]
         except KeyError:
